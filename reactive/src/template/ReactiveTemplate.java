@@ -41,7 +41,7 @@ public class ReactiveTemplate implements ReactiveBehavior {
 				this.currentCity = vehicle.getCurrentCity();
 			} else {
 				this.currentCity = vehicle.getCurrentCity();
-				this.currentCity = availableTask.deliveryCity;
+				this.destinationCity = availableTask.deliveryCity;
 			}
 		}
 		
@@ -160,24 +160,17 @@ public class ReactiveTemplate implements ReactiveBehavior {
 		
 		State state = new State(vehicle, availableTask);
 		AgentAction agentAction = A.get(state);
-		
-		System.out.println(A.keySet());
-		System.out.println(states);
-		System.out.println(state);
-		System.out.println(A.keySet().contains(state));
-		System.out.println(A.entrySet());
-		
+				
 		Action action;
-		
-		System.out.println(agentAction);
-		
-		System.out.println("TEST2");
-		
+				
 		if (agentAction.isPickup()) {
 			action = new Pickup(availableTask);
 		} else {
 			action = new Move(agentAction.moveCity);
 		}
+		
+		System.out.println("STATE - " + state);
+		System.out.println("ACTION - " + action);
 		
 		if (numActions >= 1) {
 			System.out.println("The total profit after "+numActions+" actions is "+myAgent.getTotalProfit()+" (average profit: "+(myAgent.getTotalProfit() / (double)numActions)+")");
@@ -287,6 +280,8 @@ public class ReactiveTemplate implements ReactiveBehavior {
 				}
 			}
 		}
+		
+		System.out.println(R);
 		
 		for (int i = 0; i < 100; i++) {
 			iterateQ();
