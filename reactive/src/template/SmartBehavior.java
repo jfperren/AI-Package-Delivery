@@ -139,15 +139,15 @@ public class SmartBehavior implements ReactiveBehavior {
 	@Override
 	public void setup(Topology topology, TaskDistribution td, Agent agent) {
 				
-		setupModel(topology, td);
-		fillTables(td, topology, 0.05);
-		
 		// Reads the discount factor from the agents.xml file.
 		// If the property is not present it defaults to 0.95		
 		this.discountFactor = agent.readProperty("discount-factor", Double.class, 0.95);
-		
+				
 		this.numActions = 0;
 		this.myAgent = agent;
+		
+		setupModel(topology, td);
+		fillTables(td, topology, 0.05);
 	}
 	
 
@@ -231,6 +231,39 @@ public class SmartBehavior implements ReactiveBehavior {
 		}
 	}
 	
+	private double calculateReward(TaskDistribution td, State state, AgentAction action) {
+
+		double reward = 0;
+		Vehicle vehicle = myAgent.vehicles().get(0);
+		
+		if (action.isPickup() && state.hasTask()) { // Receives package, picks it up
+			
+			// Value of package minus the cost for the distance.
+			reward += td.reward(state.currentCity, state.destinationCity);
+			reward -= state.currentCity.distanceTo(state.destinationCity) * vehicle.costPerKm();
+			
+		} else if (action.isPickup() && !state.hasTask()) { // Does not receive package, picks it up
+				
+			// Not possible, so we put the lowest weight.
+			reward = Double.NEGATIVE_INFINITY;
+			
+		} else { // Ignores package and moves
+			
+			if (state.currentCity.hasNeighbor(action.moveCity)) {
+				
+				// Simply minus the cost for the distance
+				reward -= state.currentCity.distanceTo(action.moveCity) * vehicle.costPerKm();
+				
+			} else {
+				
+				// Illegal Move
+				reward = Double.NEGATIVE_INFINITY;
+			}
+		}
+		
+		return reward;
+	}
+	
 	public void fillTables(TaskDistribution td, Topology topology, double epsilon) {
 				
 		for (State state: states) {
@@ -238,34 +271,8 @@ public class SmartBehavior implements ReactiveBehavior {
 			V.put(state, (double) td.reward(state.currentCity, state.destinationCity));
 			
 			for (AgentAction action: actions) {
-				
-				double reward = 0;
 								
-				if (action.isPickup() && state.hasTask()) { // Receives package, picks it up
-					
-					// Value of package minus the cost for the distance.
-					reward += td.reward(state.currentCity, state.destinationCity);
-					reward -= state.currentCity.distanceTo(state.destinationCity);
-					
-				} else if (action.isPickup() && !state.hasTask()) { // Does not receive package, picks it up
-						
-					// Not possible, so we put the lowest weight.
-					reward = Double.NEGATIVE_INFINITY;
-					
-				} else { // Ignores package and moves
-					
-					if (state.currentCity.hasNeighbor(action.moveCity)) {
-						
-						// Simply minus the cost for the distance
-						reward -= state.currentCity.distanceTo(action.moveCity);
-					} else {
-						
-						// Illegal Move
-						reward = Double.NEGATIVE_INFINITY;
-					}
-				}
-				
-				R.get(state).put(action, reward);
+				R.get(state).put(action, calculateReward(td, state, action));
 				
 				for (State statePrime: states) {
 					double t = transitionProbability(state, action, statePrime, td);
