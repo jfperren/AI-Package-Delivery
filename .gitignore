@@ -2,3 +2,4 @@ reactive/bin/*
 reactive/.project
 reactive/.classpath
 *.DS_Store
+reactive/history.xml
