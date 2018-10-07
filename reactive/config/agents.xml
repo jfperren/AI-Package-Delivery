@@ -8,6 +8,8 @@
 		<set class-path="bin/"/>
 		<set class-name="template.SmartBehavior"/>
 		<set discount-factor=".85"/>
+		<set distance-factor="10.0"/>
+		<set reward-factor="1.0"/>
 	</agent>
 	
 	<!--  <agent name="reactive-random">
