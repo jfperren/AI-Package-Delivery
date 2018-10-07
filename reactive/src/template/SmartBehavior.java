@@ -138,9 +138,9 @@ public class SmartBehavior implements ReactiveBehavior {
 	
 	@Override
 	public void setup(Topology topology, TaskDistribution td, Agent agent) {
-		
+				
 		setupModel(topology, td);
-		fillTables(td, topology);
+		fillTables(td, topology, 0.05);
 		
 		// Reads the discount factor from the agents.xml file.
 		// If the property is not present it defaults to 0.95		
@@ -231,7 +231,7 @@ public class SmartBehavior implements ReactiveBehavior {
 		}
 	}
 	
-	public void fillTables(TaskDistribution td, Topology topology) {
+	public void fillTables(TaskDistribution td, Topology topology, double epsilon) {
 				
 		for (State state: states) {
 			
@@ -274,12 +274,16 @@ public class SmartBehavior implements ReactiveBehavior {
 			}
 		}
 		
-		for (int i = 0; i < 100; i++) {
-			iterateQ();
+		float error = Float.POSITIVE_INFINITY;
+		
+		while (error > epsilon) {
+			error = iterateQ();
 		}
 	}
 	
-	private void iterateQ() {
+	private float iterateQ() {
+		
+		float error = 0;
 		
 		for (State state: states) {
 				
@@ -298,6 +302,13 @@ public class SmartBehavior implements ReactiveBehavior {
 				
 				sum *= this.discountFactor;
 				sum += r;
+				
+				// We add the square value to the total error
+				if (Q.get(state).containsKey(action)) {
+					error += Math.pow(Q.get(state).get(action) - sum, 2);
+				} else {
+					error = Float.POSITIVE_INFINITY;
+				}
 				
 				Q.get(state).put(action, sum);
 			}
@@ -319,5 +330,7 @@ public class SmartBehavior implements ReactiveBehavior {
 				}
 			}
 		}
+		
+		return error;
 	}
 }
