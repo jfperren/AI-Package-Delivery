@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 
 import logist.simulation.Vehicle;
@@ -19,30 +20,6 @@ import logist.topology.Topology.City;
 
 
 public class ReactiveTemplate implements ReactiveBehavior {
-
-	class StateList {
-		
-		private List<State> states; 
-		
-		public StateList(Topology topology) {
-			
-			states = new ArrayList<State>();
-			
-			for (City initialCity : topology.cities()) {
-				states.add(new State(initialCity));
-			}
-			
-			for (City initialCity : topology.cities()) {
-				for (City destinationCity : topology.cities()) {
-					states.add(new State(initialCity, destinationCity));
-				}
-			}		
-		}
-		
-		public List<State> states() {
-			return states;
-		}
-	}
 	
 	class State {
 		
@@ -58,9 +35,45 @@ public class ReactiveTemplate implements ReactiveBehavior {
 			this.destinationCity = destinationCity;
 		}
 		
+		public State(Vehicle vehicle, Task availableTask) {
+			
+			if (availableTask == null) {
+				this.currentCity = vehicle.getCurrentCity();
+			} else {
+				this.currentCity = vehicle.getCurrentCity();
+				this.currentCity = availableTask.deliveryCity;
+			}
+		}
+		
 		public boolean hasTask() {
 			return destinationCity != null;
 		}
+		
+		@Override
+	    public boolean equals(Object o) {
+
+	        if (o == this) return true;
+	        if (!(o instanceof State)) { return false; }
+	        
+	        State that = (State) o;
+	        return Objects.equals(currentCity, that.currentCity) &&
+	               Objects.equals(destinationCity, that.destinationCity);
+	    }
+
+	    @Override
+	    public int hashCode() {
+	        return Objects.hash(currentCity, destinationCity);
+	    }
+	    
+	    @Override
+	    public String toString() {
+	    	
+	    	if (hasTask()) {
+	    		return "{ State | " + currentCity + ", task to " + destinationCity + " }";
+	    	} else {
+	    		return "{ State | " + currentCity + ", no task" + " }";
+	    	}
+	    }
 	}
 	
 	class AgentAction {
@@ -78,89 +91,103 @@ public class ReactiveTemplate implements ReactiveBehavior {
 		public boolean isPickup() {
 			return moveCity == null;
 		}
-	}
+		
+		@Override
+	    public boolean equals(Object o) {
 	
-	class AgentActionList {
-		
-		private List<AgentAction> actions; 
-		
-		public AgentActionList(Topology topology) {
-			
-			actions = new ArrayList<AgentAction>();
-			
-			actions.add(new AgentAction());
-			
-			for (City initialCity : topology.cities()) {
-				actions.add(new AgentAction(initialCity));
-			}
-		}
-		
-		public List<AgentAction> actions() {
-			return actions;
-		}
-	}
-		
-	class Decision {
-		public final State state = null;
-		public final Action action = null;
-	}
-	
-	class Transition {
-		public final State initialState = null;
-		public final State finalState = null;
-		public final Action action = null;
+		    if (o == this) return true;
+		    if (!(o instanceof AgentAction)) { return false; }
+		        
+		    AgentAction that = (AgentAction) o;
+		    return Objects.equals(moveCity, that.moveCity);
+	    }
+
+	    @Override
+	    public int hashCode() {
+	    	if (moveCity == null) {
+	    		return -1;
+	    	} else {
+	    		return Objects.hash(moveCity);
+	    	}
+	    }
+	    
+	    @Override
+	    public String toString() {
+	    	
+	    	if (isPickup()) {
+	    		return "{ Action | Pick-up }";
+	    	} else {
+	    		return "{ Action | Move to + " + moveCity + " }";
+	    	}
+	    }
 	}
 	
 	private Random random;
 	private double pPickup;
 	private Agent myAgent;
 	private int numActions;
+	private double discountFactor;
 	
+	private List<State> states = new ArrayList<State>();
+	private List<AgentAction> actions = new ArrayList<AgentAction>();
 	
-//	private Map<State, Double> V = new HashMap<State, Double>();
-	private Map<Decision, Double> R = new HashMap<Decision, Double>();
-	private Map<Transition, Double> T = new HashMap<Transition, Double>();
-
-	private List<Double> V = new ArrayList<Double>();
+	private Map<State, Double> V = new HashMap<State, Double>();
+	private Map<State, Map<AgentAction, Double>> R = new HashMap<State, Map<AgentAction, Double>>();
+	private Map<State, Map<AgentAction, Double>> Q = new HashMap<State, Map<AgentAction, Double>>();
+	private Map<State, Map<AgentAction, Map<State, Double>>> T = new HashMap<State, Map<AgentAction, Map<State, Double>>>();
+	private Map<State, AgentAction> A = new HashMap<State, AgentAction>();
+	
 	
 	@Override
 	public void setup(Topology topology, TaskDistribution td, Agent agent) {
-
+		
+		setupModel(topology, td);
+		fillTables(td, topology);
+		
 		// Reads the discount factor from the agents.xml file.
-		// If the property is not present it defaults to 0.95
-		Double discount = agent.readProperty("discount-factor", Double.class,
-				0.95);
-
+		// If the property is not present it defaults to 0.95		
+		this.discountFactor = agent.readProperty("discount-factor", Double.class, 0.95);
+		
 		this.random = new Random();
-		this.pPickup = discount;
+		this.pPickup = discountFactor;
 		this.numActions = 0;
 		this.myAgent = agent;
 	}
+	
 
 	@Override
 	public Action act(Vehicle vehicle, Task availableTask) {
+		
+		State state = new State(vehicle, availableTask);
+		AgentAction agentAction = A.get(state);
+		
+		System.out.println(A.keySet());
+		System.out.println(states);
+		System.out.println(state);
+		System.out.println(A.keySet().contains(state));
+		System.out.println(A.entrySet());
+		
 		Action action;
-
-		if (availableTask == null || random.nextDouble() > pPickup) {
-			City currentCity = vehicle.getCurrentCity();
-			action = new Move(currentCity.randomNeighbor(random));
-		} else {
+		
+		System.out.println(agentAction);
+		
+		System.out.println("TEST2");
+		
+		if (agentAction.isPickup()) {
 			action = new Pickup(availableTask);
+		} else {
+			action = new Move(agentAction.moveCity);
 		}
 		
 		if (numActions >= 1) {
 			System.out.println("The total profit after "+numActions+" actions is "+myAgent.getTotalProfit()+" (average profit: "+(myAgent.getTotalProfit() / (double)numActions)+")");
 		}
 		numActions++;
-		
+//		
 		return action;
 	}
 	
-	public double initialValue(State initialState) {
-		return 0.0;
-	}
-	
-	public double transitionProbability(State initialState, State targetState, AgentAction action, TaskDistribution td) {
+	public double transitionProbability(State initialState, AgentAction action, State targetState, TaskDistribution td) {
 		
 		// Chooses the next city according to the current state and action selected
 		//
@@ -179,6 +206,132 @@ public class ReactiveTemplate implements ReactiveBehavior {
 			
 			// Zero chance to be in a different city than the destination if we pick up.
 			return 0.0;
+		}
+	}
+	
+	private void setupModel(Topology topology, TaskDistribution td) {
+		
+		// Create all actions
+		
+		actions.add(new AgentAction());
+		
+		for (City initialCity : topology.cities()) {
+			actions.add(new AgentAction(initialCity));
+		}
+		
+		// Create all states
+		
+		for (City initialCity : topology.cities()) {
+			states.add(new State(initialCity));
+		}
+		
+		for (City initialCity : topology.cities()) {
+			for (City destinationCity : topology.cities()) {
+				states.add(new State(initialCity, destinationCity));
+			}
+		}		
+		
+		// Fill all maps with default values
+		
+		for (State state: states) {
+			
+			R.put(state, new HashMap<AgentAction, Double>());
+			Q.put(state, new HashMap<AgentAction, Double>());
+			T.put(state, new HashMap<AgentAction, Map<State, Double>>());
+			
+			for (AgentAction action: actions) {
+				T.get(state).put(action, new HashMap<State, Double>());
+			}
+		}
+	}
+	
+	public void fillTables(TaskDistribution td, Topology topology) {
+				
+		for (State state: states) {
+			
+			V.put(state, (double) td.reward(state.currentCity, state.destinationCity));
+			
+			for (AgentAction action: actions) {
+				
+				double reward = 0;
+								
+				if (action.isPickup() && state.hasTask()) { // Receives package, picks it up
+					
+					// Value of package minus the cost for the distance.
+					reward += td.reward(state.currentCity, state.destinationCity);
+					reward -= state.currentCity.distanceTo(state.destinationCity);
+					
+				} else if (action.isPickup() && !state.hasTask()) { // Does not receive package, picks it up
+						
+					// Not possible, so we put the lowest weight.
+					reward = Double.NEGATIVE_INFINITY;
+					
+				} else { // Ignores package and moves
+					
+					if (state.currentCity.hasNeighbor(action.moveCity)) {
+						
+						// Simply minus the cost for the distance
+						reward -= state.currentCity.distanceTo(action.moveCity);
+					} else {
+						
+						// Illegal Move
+						reward = Double.NEGATIVE_INFINITY;
+					}
+				}
+				
+				R.get(state).put(action, reward);
+				
+				for (State statePrime: states) {
+					double t = transitionProbability(state, action, statePrime, td);
+					T.get(state).get(action).put(statePrime, t);
+				}
+			}
+		}
+		
+		for (int i = 0; i < 100; i++) {
+			iterateQ();
+		}
+	}
+	
+	private void iterateQ() {
+		
+		for (State state: states) {
+				
+			for (AgentAction action: actions) {
+				
+				double r = R.get(state).get(action);
+				double sum = 0;
+				
+				for (State statePrime: states) {
+					
+					double t = this.T.get(state).get(action).get(statePrime);
+					double v = this.V.get(statePrime);
+					
+					sum += t * v;
+				}
+				
+				sum *= this.pPickup;
+				sum += r;
+				
+				Q.get(state).put(action, sum);
+			}
+			
+			double maxValue = Double.NEGATIVE_INFINITY;
+			AgentAction maxAction = null;
+			
+			for (AgentAction action: actions) {
+				
+				double q = Q.get(state).get(action);
+				
+				if (q > maxValue) {
+					
+					maxValue = q;
+					maxAction = action;
+					
+					V.put(state, maxValue);
+					A.put(state, maxAction);
+				}
+			}
 		}
 	}
 }
