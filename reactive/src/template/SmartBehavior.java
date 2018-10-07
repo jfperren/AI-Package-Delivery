@@ -19,7 +19,7 @@ import logist.topology.Topology;
 import logist.topology.Topology.City;
 
 
-public class ReactiveTemplate implements ReactiveBehavior {
+public class SmartBehavior implements ReactiveBehavior {
 	
 	class State {
 		
@@ -122,11 +122,9 @@ public class ReactiveTemplate implements ReactiveBehavior {
 	    }
 	}
 	
-	private Random random;
-	private double pPickup;
+	private double discountFactor;
 	private Agent myAgent;
 	private int numActions;
-	private double discountFactor;
 	
 	private List<State> states = new ArrayList<State>();
 	private List<AgentAction> actions = new ArrayList<AgentAction>();
@@ -148,8 +146,6 @@ public class ReactiveTemplate implements ReactiveBehavior {
 		// If the property is not present it defaults to 0.95		
 		this.discountFactor = agent.readProperty("discount-factor", Double.class, 0.95);
 		
-		this.random = new Random();
-		this.pPickup = discountFactor;
 		this.numActions = 0;
 		this.myAgent = agent;
 	}
@@ -168,15 +164,12 @@ public class ReactiveTemplate implements ReactiveBehavior {
 		} else {
 			action = new Move(agentAction.moveCity);
 		}
-		
-		System.out.println("STATE - " + state);
-		System.out.println("ACTION - " + action);
-		
+
 		if (numActions >= 1) {
 			System.out.println("The total profit after "+numActions+" actions is "+myAgent.getTotalProfit()+" (average profit: "+(myAgent.getTotalProfit() / (double)numActions)+")");
 		}
 		numActions++;
-//		
+		
 		return action;
 	}
 	
@@ -281,8 +274,6 @@ public class ReactiveTemplate implements ReactiveBehavior {
 			}
 		}
 		
-		System.out.println(R);
-		
 		for (int i = 0; i < 100; i++) {
 			iterateQ();
 		}
@@ -305,7 +296,7 @@ public class ReactiveTemplate implements ReactiveBehavior {
 					sum += t * v;
 				}
 				
-				sum *= this.pPickup;
+				sum *= this.discountFactor;
 				sum += r;
 				
 				Q.get(state).put(action, sum);
