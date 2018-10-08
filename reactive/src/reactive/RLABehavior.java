@@ -22,7 +22,7 @@ import logist.topology.Topology.City;
 public class RLABehavior implements ReactiveBehavior {
 		
 	public static final double DEFAULT_DISCOUNT_FACTOR = 0.95;
-	public static final double ERROR_THRESHOLD = 1E-10;
+	public static final double ERROR_THRESHOLD = 1E-30;
 	
 	private double discountFactor;
 	
@@ -67,12 +67,12 @@ public class RLABehavior implements ReactiveBehavior {
 		}
 
 		if (numActions >= 1) {
-			System.out.println("The total profit after "+numActions+" actions is "+myAgent.getTotalProfit()+" (average profit: "+(myAgent.getTotalProfit() / (double)numActions)+")");
+			System.out.println(myAgent.name() + ": The total profit after "+numActions+" actions is "+myAgent.getTotalProfit()+" (average profit: "+(myAgent.getTotalProfit() / (double)numActions)+")");
 		}
 		numActions++;
 		
 		return action;
-	}
+	}	
 	
 	public double transitionProbability(State initialState, AgentAction action, State targetState, TaskDistribution td) {
 		
@@ -159,7 +159,7 @@ public class RLABehavior implements ReactiveBehavior {
 				
 		for (State state: states) {
 			
-			V.put(state, (double) td.reward(state.currentCity, state.destinationCity));
+			V.put(state, 0.0);
 			
 			for (AgentAction action: actions) {
 								
@@ -172,11 +172,11 @@ public class RLABehavior implements ReactiveBehavior {
 			}
 		}
 		
-		float error = Float.POSITIVE_INFINITY;
+		float error;
 		
-		while (error >= ERROR_THRESHOLD) {
+		do {
 			error = iterateQ();
-		}
+		} while (error >= ERROR_THRESHOLD);
 	}
 	
 	private float iterateQ() {
@@ -190,43 +190,46 @@ public class RLABehavior implements ReactiveBehavior {
 				double r = R.get(state).get(action);
 				double sum = 0;
 				
+				if (r == Double.NEGATIVE_INFINITY) {
+					Q.get(state).put(action, Double.NEGATIVE_INFINITY);
+					continue;
+				}
+				
 				for (State statePrime: states) {
 					
-					double t = this.T.get(state).get(action).get(statePrime);
-					double v = this.V.get(statePrime);
+					double t = T.get(state).get(action).get(statePrime);
+					double v = V.get(statePrime);
 					
 					sum += t * v;
 				}
 				
 				sum *= this.discountFactor;
 				sum += r;
-				
-				// We add the square value to the total error
-				if (Q.get(state).containsKey(action)) {
-					error += Math.pow(Q.get(state).get(action) - sum, 2);
-				} else {
-					error = Float.POSITIVE_INFINITY;
-				}
-				
+								
 				Q.get(state).put(action, sum);
 			}
 			
-			double maxValue = Double.NEGATIVE_INFINITY;
-			AgentAction maxAction = null;
+			// Find action that maximizes Q.
+				
+			double bestValue = Double.NEGATIVE_INFINITY;
+			AgentAction bestAction = null;
 			
 			for (AgentAction action: actions) {
 				
 				double q = Q.get(state).get(action);
 				
-				if (q > maxValue) {
-					
-					maxValue = q;
-					maxAction = action;
-					
-					V.put(state, maxValue);
-					A.put(state, maxAction);
+				if (q > bestValue) {
+					bestValue = q;
+					bestAction = action;
 				}
 			}
+			
+			// Update error according to least square policy
+			error += Math.pow(V.get(state) - bestValue, 2);
+			
+			// Update A and V with best action and its value
+			V.put(state, bestValue);
+			A.put(state, bestAction);
 		}
 		
 		return error;
