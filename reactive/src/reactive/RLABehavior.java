@@ -22,13 +22,9 @@ import logist.topology.Topology.City;
 public class RLABehavior implements ReactiveBehavior {
 		
 	public static final double DEFAULT_DISCOUNT_FACTOR = 0.95;
-	public static final double DEFAULT_REWARD_FACTOR = 1;
-	public static final double DEFAULT_DISTANCE_FACTOR = 1;
 	public static final double ERROR_THRESHOLD = 1E-10;
 	
 	private double discountFactor;
-	private double distanceFactor;
-	private double rewardFactor;
 	
 	private Agent myAgent;
 	private int numActions;
@@ -47,8 +43,6 @@ public class RLABehavior implements ReactiveBehavior {
 	public void setup(Topology topology, TaskDistribution td, Agent agent) {
 					
 		this.discountFactor = agent.readProperty("discount-factor", Double.class, DEFAULT_DISCOUNT_FACTOR);
-		this.distanceFactor = agent.readProperty("distance-factor", Double.class, DEFAULT_DISTANCE_FACTOR);
-		this.rewardFactor = agent.readProperty("reward-factor", Double.class, DEFAULT_REWARD_FACTOR);
 		
 		this.numActions = 0;
 		this.myAgent = agent;
@@ -115,10 +109,9 @@ public class RLABehavior implements ReactiveBehavior {
 		// Create all states
 		
 		for (City initialCity : topology.cities()) {
+			
 			states.add(new State(initialCity));
-		}
-		
-		for (City initialCity : topology.cities()) {
+			
 			for (City destinationCity : topology.cities()) {
 				states.add(new State(initialCity, destinationCity));
 			}
@@ -154,10 +147,10 @@ public class RLABehavior implements ReactiveBehavior {
 		City destinationCity = action.isPickup() ? state.destinationCity : action.moveCity;
 		
 		if (action.isPickup()) {
-			reward += rewardFactor * td.reward(currentCity, destinationCity);
+			reward += td.reward(currentCity, destinationCity);
 		}
 		
-		reward -= distanceFactor * currentCity.distanceTo(destinationCity) * vehicle.costPerKm();
+		reward -= currentCity.distanceTo(destinationCity) * vehicle.costPerKm();
 		
 		return reward;
 	}

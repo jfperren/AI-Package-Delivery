@@ -13,9 +13,7 @@
 	<agent name="reactive-rla">
 		<set class-path="bin/"/>
 		<set class-name="reactive.RLABehavior"/>
-		<set discount-factor=".85"/>
-		<set distance-factor="10.0"/>
-		<set reward-factor="1.0"/>
+		<set discount-factor="0.95"/>
 	</agent>
 	
 	<!--  <agent name="reactive-random">
