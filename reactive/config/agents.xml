@@ -6,14 +6,19 @@
 	<!-- #### REACTIVE AGENTS ### -->
 	<agent name="reactive-random">
 		<set class-path="bin/"/>
-		<set class-name="template.ReactiveTemplate"/>
+		<set class-name="reactive.RandomBehavior"/>
 		<set discount-factor=".85"/>
 	</agent>
 
 	<agent name="reactive-rla">
 		<set class-path="bin/"/>
-		<set class-name="ReactiveRLA"/>
-		<set discount-factor=".85"/>
+		<set class-name="reactive.RLABehavior"/>
+		<set discount-factor="0.95"/>
 	</agent>
 	
+	<!--  <agent name="reactive-random">
+		<set class-path="bin/"/>
+		<set class-name="template.RandomBehavior"/>
+		<set discount-factor=".85"/>
+	</agent> -->
 </agents>
