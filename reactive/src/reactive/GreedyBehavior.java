@@ -17,15 +17,16 @@ import java.util.Random;
 
 public class GreedyBehavior implements ReactiveBehavior {
 
-	private int numActions;
 	private Agent myAgent;
+	private BehaviorLogger logger;
 
 	private Map<City, City> best_move = new HashMap<>();
 
 	@Override
 	public void setup(Topology topology, TaskDistribution td, Agent agent) {
-		this.numActions = 0;
+
 		this.myAgent = agent;
+		this.logger = new BehaviorLogger();
 
 		for (City start : topology.cities()){
 			double max_expect = 0;
@@ -50,10 +51,7 @@ public class GreedyBehavior implements ReactiveBehavior {
 			action = new Pickup(availableTask);
 		}
 		
-		if (numActions >= 1) {
-			System.out.println(myAgent.name() + ": The total profit after "+numActions+" actions is "+myAgent.getTotalProfit()+" (average profit: "+(myAgent.getTotalProfit() / (double)numActions)+")");
-		}
-		numActions++;
+		logger.logProfit(myAgent);
 		
 		return action;
 	}
