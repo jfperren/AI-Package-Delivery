@@ -1,5 +1,7 @@
+**/.DS_Store
 reactive/bin/*
 reactive/.project
 reactive/.classpath
-*.DS_Store
+reactive/.idea/
+reactive/reactive.iml
 reactive/history.xml

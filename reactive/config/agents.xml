@@ -6,7 +6,13 @@
 	<!-- #### REACTIVE AGENTS ### -->
 	<agent name="reactive-random">
 		<set class-path="bin/"/>
-		<set class-name="template.SmartBehavior"/>
+		<set class-name="reactive.RandomBehavior"/>
+		<set discount-factor=".85"/>
+	</agent>
+
+	<agent name="reactive-rla">
+		<set class-path="bin/"/>
+		<set class-name="reactive.RLABehavior"/>
 		<set discount-factor=".85"/>
 		<set distance-factor="10.0"/>
 		<set reward-factor="1.0"/>

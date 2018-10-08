@@ -1,4 +1,4 @@
-package template;
+package reactive;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,7 +19,7 @@ import logist.topology.Topology;
 import logist.topology.Topology.City;
 
 
-public class SmartBehavior implements ReactiveBehavior {
+public class RLABehavior implements ReactiveBehavior {
 		
 	public static final double DEFAULT_DISCOUNT_FACTOR = 0.95;
 	public static final double DEFAULT_REWARD_FACTOR = 1;
