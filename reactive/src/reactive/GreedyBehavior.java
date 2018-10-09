@@ -15,12 +15,20 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+/**
+ * A greedy agent behavior that always selects a task if available. If there is no
+ * task, it will simply move to the neighbor that contains tasks with highest expected
+ * rewards.
+ * 
+ * @author Julien Perrenoud & Pierre-Antoine Desplaces.
+ *
+ */
 public class GreedyBehavior implements ReactiveBehavior {
 
 	private Agent myAgent;
 	private BehaviorLogger logger;
 
-	private Map<City, City> best_move = new HashMap<>();
+	private Map<City, City> bestMove = new HashMap<>();
 
 	@Override
 	public void setup(Topology topology, TaskDistribution td, Agent agent) {
@@ -29,14 +37,17 @@ public class GreedyBehavior implements ReactiveBehavior {
 		this.logger = new BehaviorLogger();
 
 		for (City start : topology.cities()){
-			double max_expect = 0;
-			City best_city = start.randomNeighbor(new Random());
-			for (City dest : start.neighbors()){
-				if (td.probability(start, dest)*td.reward(start, dest) > max_expect){
-					best_city = dest;
+			
+			double maxValue = Double.NEGATIVE_INFINITY;
+			City bestCity = null;
+			
+			for (City destination : start.neighbors()){
+				if (td.probability(start, destination) * td.reward(start, destination) > maxValue){
+					bestCity = destination;
 				}
 			}
-			best_move.put(start, best_city);
+			
+			bestMove.put(start, bestCity);
 		}
 	}
 
@@ -46,7 +57,7 @@ public class GreedyBehavior implements ReactiveBehavior {
 
 		if (availableTask == null) {
 			City currentCity = vehicle.getCurrentCity();
-			action = new Move(best_move.get(currentCity));
+			action = new Move(bestMove.get(currentCity));
 		} else {
 			action = new Pickup(availableTask);
 		}
