@@ -3,19 +3,8 @@
 <agents>
 	<!-- A list of agents and their behavior classes -->
 	
-	<!-- #### REACTIVE AGENTS ### -->
-	<agent name="reactive-random">
-		<set class-path="bin/"/>
-		<set class-name="reactive.RandomBehavior"/>
-		<set discount-factor=".85"/>
-	</agent>
-
-	<agent name="reactive-rla">
-		<set class-path="bin/"/>
-		<set class-name="reactive.RLABehavior"/>
-		<set discount-factor="0.85"/>
-	</agent>
-
+	<!-- #### Agents for Optimization of RLA ### -->
+	
 	<agent name="reactive-rla-25">
 		<set class-path="bin/"/>
 		<set class-name="reactive.RLABehavior"/>
@@ -28,25 +17,27 @@
 		<set discount-factor="0.5"/>
 	</agent>
 
-	<agent name="reactive-rla-70">
-		<set class-path="bin/"/>
-		<set class-name="reactive.RLABehavior"/>
-		<set discount-factor="0.7"/>
-	</agent>
-
 	<agent name="reactive-rla-75">
 		<set class-path="bin/"/>
 		<set class-name="reactive.RLABehavior"/>
 		<set discount-factor="0.75"/>
 	</agent>
-
-	<agent name="reactive-rla-80">
+	
+		<agent name="reactive-rla-95">
 		<set class-path="bin/"/>
 		<set class-name="reactive.RLABehavior"/>
-		<set discount-factor="0.8"/>
+		<set discount-factor="0.95"/>
+	</agent>
+	
+	<!-- #### Agents for Dummy Experiment ### -->
+	
+	<agent name="reactive-random">
+		<set class-path="bin/"/>
+		<set class-name="reactive.RandomBehavior"/>
+		<set p-pickup=".85"/>
 	</agent>
 
-	<agent name="reactive-rla-95">
+	<agent name="reactive-rla">
 		<set class-path="bin/"/>
 		<set class-name="reactive.RLABehavior"/>
 		<set discount-factor="0.95"/>

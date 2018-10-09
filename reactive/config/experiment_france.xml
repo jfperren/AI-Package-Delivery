@@ -7,7 +7,7 @@
 	<settings import="config/settings_default.xml" />	
 	
 	<!-- load the topology-->
-	<topology import="config/topology/switzerland.xml" />
+	<topology import="config/topology/france.xml" />
 	
 	<!-- load agents -->
 	<agents import="config/agents.xml" />
