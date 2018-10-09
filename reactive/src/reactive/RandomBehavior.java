@@ -13,8 +13,11 @@ import logist.task.TaskDistribution;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
 
+
 public class RandomBehavior implements ReactiveBehavior {
 
+	public static final double DEFAULT_P_PICKUP = 0.95;
+	
 	private Random random;
 	private double pPickup;
 	private Agent myAgent;
@@ -23,10 +26,7 @@ public class RandomBehavior implements ReactiveBehavior {
 	@Override
 	public void setup(Topology topology, TaskDistribution td, Agent agent) {
 
-		// Reads the discount factor from the agents.xml file.
-		// If the property is not present it defaults to 0.95
-		Double discount = agent.readProperty("discount-factor", Double.class,
-				0.95);
+		Double discount = agent.readProperty("p-pickup", Double.class, DEFAULT_P_PICKUP);
 
 		this.random = new Random();
 		this.pPickup = discount;
