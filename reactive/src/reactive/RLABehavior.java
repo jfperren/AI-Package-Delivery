@@ -19,23 +19,47 @@ import logist.topology.Topology;
 import logist.topology.Topology.City;
 
 
+/**
+ * Agent Behavior class that implements a basic Reinforcement Learning Algorithm.
+ *  
+ * @author Julien Perrenoud & Pierre-Antoine Desplaces
+ * 
+ */
 public class RLABehavior implements ReactiveBehavior {
 		
 	public static final double DEFAULT_DISCOUNT_FACTOR = 0.95;
+	
+	/** Error below which we consider two Q-tables to be "good enough" (Using LSE) */
 	public static final double ERROR_THRESHOLD = 1E-30;
 	
+	/** Constant by which future rewards are multiplied. Should be in [0, 1). */
 	private double discountFactor;
 	
 	private Agent myAgent;
 	private BehaviorLogger logger;
 	
+	/** List of all possible states in the system, use it to simplify iteration */
 	private List<State> states = new ArrayList<State>();
+	
+	/** List of all possible action in the system, use it to simplify iteration */
 	private List<AgentAction> actions = new ArrayList<AgentAction>();
 	
-	private Map<State, Double> V = new HashMap<State, Double>();
-	private Map<State, Map<AgentAction, Double>> R = new HashMap<State, Map<AgentAction, Double>>();
-	private Map<State, Map<AgentAction, Double>> Q = new HashMap<State, Map<AgentAction, Double>>();
+	/** 
+	 *  Transition probabilities between two states using a specified action. Should be accessed
+	 *  as T.get(initialState).get(action).get(targetState)
+	 */
 	private Map<State, Map<AgentAction, Map<State, Double>>> T = new HashMap<State, Map<AgentAction, Map<State, Double>>>();
+	
+	/** Infinite-horizon expected value of each state */
+	private Map<State, Double> V = new HashMap<State, Double>();
+	
+	/** Immediate reward for undertaking an action in a certain state */
+	private Map<State, Map<AgentAction, Double>> R = new HashMap<State, Map<AgentAction, Double>>();
+	
+	/** Q-Table used for offline RLA algorithm */
+	private Map<State, Map<AgentAction, Double>> Q = new HashMap<State, Map<AgentAction, Double>>();
+	
+	/** Contain best action for each state after offline RLA is performed. */
 	private Map<State, AgentAction> A = new HashMap<State, AgentAction>();
 	
 	
@@ -47,8 +71,21 @@ public class RLABehavior implements ReactiveBehavior {
 		this.myAgent = agent;
 		this.logger = new BehaviorLogger();
 		
-		setupModel(topology, td);
-		fillTables(td, topology, 0.05);
+		// 1. Initialize states and actions
+		
+		setupModel(topology);
+		
+		// 2. Create all tables and set their default values
+		
+		setupTables(topology, td);
+		
+		// 3. Perform Reinforcement Learning Algorithm until error is small enough
+		
+		double error;
+		
+		do {
+			error = iterateQ();
+		} while (error >= ERROR_THRESHOLD);
 	}
 	
 
@@ -71,29 +108,14 @@ public class RLABehavior implements ReactiveBehavior {
 		return action;
 	}	
 	
-	public double transitionProbability(State initialState, AgentAction action, State targetState, TaskDistribution td) {
-		
-		// Chooses the next city according to the current state and action selected
-		//
-		// - If the agent picks up the task, the next city is the destination of the task
-		// - If the agent decides to move, the next city is contained in the move decision
-		//
-		City nextCity = action.isPickup() ? initialState.destinationCity : action.moveCity;
-		
-		
-		// Check if the target state's current city is the same as where the agent is going.
-		if (targetState.currentCity == nextCity) {
-			
-			// Returns probability in this city according to the task distribution parameter.
-			return td.probability(targetState.currentCity, targetState.destinationCity);
-		} else {
-			
-			// Zero chance to be in a different city than the destination if we pick up.
-			return 0.0;
-		}
-	}
-	
-	private void setupModel(Topology topology, TaskDistribution td) {
+	/**
+	 * Create list of all actions and states according to the topology of
+	 * the current simulation.
+	 * 
+	 * @param topology topology of the network (to create states and actions)
+	 * 
+	 */
+	private void setupModel(Topology topology) {
 		
 		// Create all actions
 		
@@ -116,18 +138,86 @@ public class RLABehavior implements ReactiveBehavior {
 		
 		// Fill all maps with default values
 		
+		
+	}
+	
+	/**
+	 * Initialize all tables required for RLA:
+	 * 
+	 *  - R is filled using "calculateReward"
+	 *  - T is filled using "transitionProbability"
+	 *  - Q is only initialized, there is no default value
+	 *  - V is initialized to 0.0 as the value can be arbitrary.
+	 * 
+	 * @param topology topology of the network (to calculate rewards)
+	 * @param td task distribution of the network (to calculate rewards and probabilities)
+	 */
+	public void setupTables(Topology topology, TaskDistribution td) {
+		
 		for (State state: states) {
 			
 			R.put(state, new HashMap<AgentAction, Double>());
 			Q.put(state, new HashMap<AgentAction, Double>());
 			T.put(state, new HashMap<AgentAction, Map<State, Double>>());
+			V.put(state, 0.0);
 			
 			for (AgentAction action: actions) {
+				
 				T.get(state).put(action, new HashMap<State, Double>());
+				R.get(state).put(action, calculateReward(td, state, action));
+				
+				for (State statePrime: states) {
+					double t = transitionProbability(state, action, statePrime, td);
+					T.get(state).get(action).put(statePrime, t);
+				}
 			}
 		}
 	}
 	
+	/**
+	 * Calculate the transition probability from initialState to targetState when the
+	 * agent undertakes a specified action. 
+	 * 
+	 * @param initialState the current state of the agent
+	 * @param action the action taken by the agent
+	 * @param targetState the state that agent will be in during the next step
+	 * @param td the task distribution of the network
+	 * 
+	 * @return the probability of transition
+	 */
+	public double transitionProbability(State initialState, AgentAction action, State targetState, TaskDistribution td) {
+		
+		// Chooses the next city according to the current state and action selected
+		//
+		// - If the agent picks up the task, the next city is the destination of the task
+		// - If the agent decides to move, the next city is contained in the move decision
+		//
+		City nextCity = action.isPickup() ? initialState.destinationCity : action.moveCity;
+		
+		
+		// Check if the target state's current city is the same as where the agent is going.
+		if (targetState.currentCity == nextCity) {
+			
+			// Returns probability in this city according to the task distribution parameter.
+			return td.probability(targetState.currentCity, targetState.destinationCity);
+		} else {
+			
+			// Zero chance to be in a different city than the destination if we pick up.
+			return 0.0;
+		}
+	}
+	
+	/**
+	 * Calculate the reward associated with a given action in a given state. If the action
+	 * is not possible according to the model (for instance, picking up a non-existent task
+	 * or moving to a city that is not a direct neighbor), then it returns NEGATIVE_INFINITY.
+	 * 
+	 * @param td the task distribution of the network
+	 * @param state the current state of the agent
+	 * @param action the action taken by the agent
+	 * @return the reward associated with the action, or NEGATIVE_INFINITY if the action is
+	 * 		   not allowed.
+	 */
 	private double calculateReward(TaskDistribution td, State state, AgentAction action) {
 
 		double reward = 0;
@@ -152,30 +242,15 @@ public class RLABehavior implements ReactiveBehavior {
 		return reward;
 	}
 	
-	public void fillTables(TaskDistribution td, Topology topology, double epsilon) {
-				
-		for (State state: states) {
-			
-			V.put(state, 0.0);
-			
-			for (AgentAction action: actions) {
-								
-				R.get(state).put(action, calculateReward(td, state, action));
-				
-				for (State statePrime: states) {
-					double t = transitionProbability(state, action, statePrime, td);
-					T.get(state).get(action).put(statePrime, t);
-				}
-			}
-		}
-		
-		float error;
-		
-		do {
-			error = iterateQ();
-		} while (error >= ERROR_THRESHOLD);
-	}
-	
+	/**
+	 * This represents one iteration of the RLA algorithm. It iterates over
+	 * all possible states and actions, and updates the Q-table according to
+	 * the Q-learning rule. Finally, it updates the A and V tables to reflect
+	 * the best value and best action to undertake in each state.
+	 * 
+	 * @return the error between the previous values in the Q-table and the 
+	 * updated ones, using the Least Square Error function.
+	 */
 	private float iterateQ() {
 		
 		float error = 0;
@@ -200,7 +275,7 @@ public class RLABehavior implements ReactiveBehavior {
 					sum += t * v;
 				}
 				
-				sum *= this.discountFactor;
+				sum *= discountFactor;
 				sum += r;
 								
 				Q.get(state).put(action, sum);
@@ -232,6 +307,13 @@ public class RLABehavior implements ReactiveBehavior {
 		return error;
 	}
 	
+	// Inner Classes
+	
+	/**
+	 * Representation of a state in the model. If destinationCity is
+	 * null, then currentCity does not contain a task to be delivered.
+	 * (Note - This can also be checked using hasTask()).
+	 */
 	class State {
 		
 		public City currentCity = null;
@@ -287,6 +369,12 @@ public class RLABehavior implements ReactiveBehavior {
 	    }
 	}
 	
+	/**
+	 * Representation of an action in the model. If moveCity is
+	 * null, then it is a "pick-up" action. Otherwise, it is a
+	 * "move" action. (Note - This can also be checked using 
+	 * isPickup()).
+	 */
 	class AgentAction {
 		
 		public City moveCity = null;
