@@ -13,6 +13,42 @@
 	<agent name="reactive-rla">
 		<set class-path="bin/"/>
 		<set class-name="reactive.RLABehavior"/>
+		<set discount-factor="0.85"/>
+	</agent>
+
+	<agent name="reactive-rla-25">
+		<set class-path="bin/"/>
+		<set class-name="reactive.RLABehavior"/>
+		<set discount-factor="0.25"/>
+	</agent>
+
+	<agent name="reactive-rla-50">
+		<set class-path="bin/"/>
+		<set class-name="reactive.RLABehavior"/>
+		<set discount-factor="0.5"/>
+	</agent>
+
+	<agent name="reactive-rla-70">
+		<set class-path="bin/"/>
+		<set class-name="reactive.RLABehavior"/>
+		<set discount-factor="0.7"/>
+	</agent>
+
+	<agent name="reactive-rla-75">
+		<set class-path="bin/"/>
+		<set class-name="reactive.RLABehavior"/>
+		<set discount-factor="0.75"/>
+	</agent>
+
+	<agent name="reactive-rla-80">
+		<set class-path="bin/"/>
+		<set class-name="reactive.RLABehavior"/>
+		<set discount-factor="0.8"/>
+	</agent>
+
+	<agent name="reactive-rla-95">
+		<set class-path="bin/"/>
+		<set class-name="reactive.RLABehavior"/>
 		<set discount-factor="0.95"/>
 	</agent>
 
@@ -20,10 +56,5 @@
 		<set class-path="bin/"/>
 		<set class-name="reactive.GreedyBehavior"/>
 	</agent>
-	
-	<!--  <agent name="reactive-random">
-		<set class-path="bin/"/>
-		<set class-name="template.RandomBehavior"/>
-		<set discount-factor=".85"/>
-	</agent> -->
+
 </agents>
