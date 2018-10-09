@@ -29,9 +29,10 @@
 	
 	<!-- the companies and vehicles in the simulation -->
 	<companies>
+	
 		<company name="Company A">
 			<!-- the first vehicle (blue) -->
-			<vehicle name="0.25">
+			<vehicle name="Random">
 				<set color="#0000ff" />
 				<set home="Genève" />
 				<set speed="220" />
@@ -42,7 +43,7 @@
 		
 		<company name="Company B">
 			<!-- the second vehicle (red) -->
-			<vehicle name="0.5">
+			<vehicle name="Greedy">
 				<set color="#ff0000" />
 				<set home="Lausanne" />
 				<set speed="220" />
@@ -53,20 +54,9 @@
 
 		<company name="Company C">
 			<!-- the third vehicle (green) -->
-			<vehicle name="0.75">
+			<vehicle name="RLA">
 				<set color="#00ff00" />
 				<set home="Basel" />
-				<set speed="220" />
-				<set capacity="30" />
-				<set cost-per-km="5" />
-			</vehicle>
-		</company>
-
-		<company name="Company D">
-			<!-- the fourth vehicle (orange) -->
-			<vehicle name="0.95">
-				<set color="#ffa500" />
-				<set home="Zürich" />
 				<set speed="220" />
 				<set capacity="30" />
 				<set cost-per-km="5" />

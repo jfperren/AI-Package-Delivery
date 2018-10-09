@@ -29,6 +29,7 @@
 	
 	<!-- the companies and vehicles in the simulation -->
 	<companies>
+	
 		<company name="Company A">
 			<!-- the first vehicle (blue) -->
 			<vehicle name="Random">
