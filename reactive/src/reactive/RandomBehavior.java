@@ -27,9 +27,9 @@ public class RandomBehavior implements ReactiveBehavior {
 	public void setup(Topology topology, TaskDistribution td, Agent agent) {
 
 		Double discount = agent.readProperty("p-pickup", Double.class, DEFAULT_P_PICKUP);
-
+		this.pPickup = Math.min(Math.max(discount, 0.0), 1.0);
+		
 		this.random = new Random();
-		this.pPickup = discount;
 		this.myAgent = agent;
 		this.logger = new BehaviorLogger();
 	}

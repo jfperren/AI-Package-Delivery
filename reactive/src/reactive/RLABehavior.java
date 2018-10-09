@@ -28,6 +28,7 @@ import logist.topology.Topology.City;
 public class RLABehavior implements ReactiveBehavior {
 		
 	public static final double DEFAULT_DISCOUNT_FACTOR = 0.95;
+	public static final double DEFAULT_DISCOUNT_MAX = 0.99;
 	
 	/** Error below which we consider two Q-tables to be "good enough" (Using LSE) */
 	public static final double ERROR_THRESHOLD = 1E-30;
@@ -67,6 +68,7 @@ public class RLABehavior implements ReactiveBehavior {
 	public void setup(Topology topology, TaskDistribution td, Agent agent) {
 					
 		this.discountFactor = agent.readProperty("discount-factor", Double.class, DEFAULT_DISCOUNT_FACTOR);
+		this.discountFactor = Math.min(Math.max(discountFactor, 0.0), DEFAULT_DISCOUNT_MAX);
 		
 		this.myAgent = agent;
 		this.logger = new BehaviorLogger();
