@@ -2,14 +2,14 @@ package template;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
+import logist.plan.Action;
 import logist.simulation.Vehicle;
 import logist.task.Task;
 import logist.task.TaskSet;
 import logist.topology.Topology.City;
-import template.DeliberativeTemplate.Action;
-import template.DeliberativeTemplate.Mode;
-import template.DeliberativeTemplate.Node;
+
 
 class State {
 	
@@ -17,23 +17,17 @@ class State {
 	public TaskSet availableTasks;
 	public TaskSet transportedTasks;
 	public int capacity;
-//	public int cost;
-//	public State parent; 
 	
 	public State(
 		City currentCity, 
 		TaskSet availableTasks, 
 		TaskSet transportedTasks, 
 		int capacity
-//		int cost,
-//		State parent
 	) {
 		this.currentCity = currentCity;
 		this.availableTasks = availableTasks;
 		this.transportedTasks = transportedTasks;
 		this.capacity = capacity;
-//		this.cost = cost;
-//		this.parent = parent;
 	}
 	
 	public State(Vehicle vehicle, TaskSet tasks) {
@@ -43,13 +37,13 @@ class State {
 		this.capacity = vehicle.capacity();
 	}
 	
-	public List<State> nextStates(int costPerKm) {
+	public List<Tuple<State, Action>> nextStates() {
 		
-		List<State> nextStates = new ArrayList<State>();
+		List<Tuple<State, Action>> nextStates = new ArrayList<Tuple<State, Action>>();
 		
 		for (Task task: availableTasks) {
 			
-			if (task.deliveryCity == currentCity && task.weight >= capacity) {
+			if (task.pickupCity == currentCity && task.weight <= capacity) {
 				
 				// Pick-up the task
 				
@@ -59,37 +53,30 @@ class State {
 				TaskSet newTransportedTasks = transportedTasks.clone();
 				newTransportedTasks.add(task);
 				
-				nextStates.add(new State(
+				nextStates.add(new Tuple<State, Action>(new State(
 					currentCity,
 					newAvailableTasks,
 					newTransportedTasks,
 					capacity - task.weight
-//					cost,
-//					this
-				));
+				), new Action.Pickup(task)));
 			}
 		}
 		
 		for (Task task: transportedTasks) {
 			
-			if (task.pickupCity == currentCity) {
+			if (task.deliveryCity == currentCity) {
 				
 				// Deliver the task
 				
-				TaskSet newAvailableTasks = availableTasks.clone();
-				newAvailableTasks.remove(task);
-				
 				TaskSet newTransportedTasks = transportedTasks.clone();
-				newTransportedTasks.add(task);
+				newTransportedTasks.remove(task);
 				
-				nextStates.add(new State(
+				nextStates.add(new Tuple<State, Action>(new State(
 					currentCity,
-					newAvailableTasks,
+					availableTasks,
 					newTransportedTasks,
 					capacity + task.weight
-//					cost,
-//					this
-				));
+				), new Action.Delivery(task)));
 			}
 		}
 
@@ -97,75 +84,52 @@ class State {
 			
 			// Move to the city
 			
-			nextStates.add(new State(
+			nextStates.add(new Tuple<State, Action>(new State(
 				city,
 				availableTasks,
 				transportedTasks,
 				capacity
-//				cost + currentCity.distanceTo(city) * int(costPerKm),
-//				this
-			));
+			), new Action.Move(city)));
 		}
 		
 		return nextStates;
 	}
-		
 	
-//		public Node afterMove(City city) {	
-//			
-//			path = new ArrayList<Action>();
-//			path.addAll(this.path);
-//			path.add(new Action(city));
-//			
-//			return new Node(
-//				new State(
-//					city,
-//					availableTasks,
-//					transportedTasks,
-//					capacity
-//				),
-//				value + 0,
-//				path
-//			
-//				
-//				
-//			);
-//			
-//			
-//			return ;
-//		}
-//		
-//		public State afterPickup(Task task) {	
-//			
-//			TaskSet newAvailableTasks = availableTasks.clone();
-//			newAvailableTasks.remove(task);
-//			
-//			TaskSet newTransportedTasks = transportedTasks.clone();
-//			newTransportedTasks.add(task);
-//			
-//			return new State(
-//				currentCity,
-//				newAvailableTasks,
-//				newTransportedTasks,
-//				capacity - task.weight
-//			);
-//		}
-//		
-//		public State afterDelivery(Task task) {	
-//						
-//			TaskSet newTransportedTasks = transportedTasks.clone();
-//			newTransportedTasks.remove(task);
-//			
-//			return new State(
-//				currentCity,
-//				availableTasks,
-//				newTransportedTasks,
-//				capacity + task.weight
-//			);
-//		}
-//		
-//		public boolean isFinal() {
-//			return availableTasks.isEmpty() && transportedTasks.isEmpty();
-//		}
-//	}
+	public boolean isFinal() {
+		return availableTasks.isEmpty() && transportedTasks.isEmpty();
+	}
+	
+	@Override
+	public String toString() {
+		return "At " + currentCity + " with tasks [" + transportedTasks + " and capacity " + capacity + ". Leftover tasks are " + availableTasks; 
+	}
+	
+	@Override
+    public boolean equals(Object o) {
+
+        if (o == this) return true;
+        if (!(o instanceof State)) { return false; }
+        
+        State that = (State) o;
+        return Objects.equals(currentCity, that.currentCity) &&
+               Objects.equals(capacity, that.capacity) &&
+               Objects.equals(availableTasks, that.availableTasks) &&
+               Objects.equals(transportedTasks, that.transportedTasks);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(currentCity, capacity, availableTasks, transportedTasks);
+    }
+	
+	public class Tuple<X, Y> { 
+		
+		public final X x; 
+		public final Y y; 
+		
+		public Tuple(X x, Y y) { 
+			this.x = x; 
+		    this.y = y; 
+		} 
+	} 
 }
