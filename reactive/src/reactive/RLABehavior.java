@@ -31,7 +31,7 @@ public class RLABehavior implements ReactiveBehavior {
 	public static final double DEFAULT_DISCOUNT_MAX = 0.99;
 	
 	/** Error below which we consider two Q-tables to be "good enough" (Using LSE) */
-	public static final double ERROR_THRESHOLD = 1E-30;
+	public static final double ERROR_THRESHOLD = 1E-10;
 	
 	/** Constant by which future rewards are multiplied. Should be in [0, 1). */
 	private double discountFactor;
