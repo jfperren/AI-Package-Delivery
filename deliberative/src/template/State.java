@@ -1,8 +1,10 @@
 package template;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import logist.plan.Action;
 import logist.simulation.Vehicle;
@@ -99,14 +101,22 @@ class State {
 		return availableTasks.isEmpty() && transportedTasks.isEmpty();
 	}
 	
-	public Double heuristic() {
-//		Double heuristic = 0;
-//				
-//		for (Task task: transportedTasks) {
-//			
-//		}
-//		
-		return 0.0;
+	public Double heuristic(Vehicle vehicle) {
+		
+		Set<City> cities = new HashSet<City>();
+		
+		for (Task task: availableTasks) {
+			cities.add(task.deliveryCity);
+			cities.add(task.pickupCity);
+		}
+		
+		for (Task task: transportedTasks) {
+			cities.add(task.deliveryCity);
+		}
+		
+		cities.add(currentCity);
+		
+		return Graph.completeCityGraph(cities).mstWeight() * vehicle.costPerKm() ;
 	}
 	
 	@Override
@@ -131,15 +141,4 @@ class State {
     public int hashCode() {
         return Objects.hash(currentCity, capacity, availableTasks, transportedTasks);
     }
-	
-	public class Tuple<X, Y> { 
-		
-		public final X x; 
-		public final Y y; 
-		
-		public Tuple(X x, Y y) { 
-			this.x = x; 
-		    this.y = y; 
-		} 
-	} 
 }

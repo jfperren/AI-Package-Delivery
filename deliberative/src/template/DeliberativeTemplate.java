@@ -22,7 +22,6 @@ import logist.task.TaskDistribution;
 import logist.task.TaskSet;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
-import template.State.Tuple;
 
 
 /**
@@ -205,7 +204,7 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 		Map<State, Action> causes = new HashMap<State, Action>();
 		
 		final Map<State, Double> f = new HashMap<State, Double>();
-		f.put(initialState, initialState.heuristic());
+		f.put(initialState, initialState.heuristic(vehicle));
 		
 		final Map<State, Double> g = new HashMap<State, Double>();
 		g.put(initialState, 0.0);
@@ -269,7 +268,8 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 				// parents in every single node.
 				parents.put(child, state);
 				g.put(child, childCost);
-				f.put(child, childCost + child.heuristic());
+				f.put(child, childCost + child.heuristic(vehicle));
+				
 				causes.put(child, action);
 				
 				// Enqueue the child
