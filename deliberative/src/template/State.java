@@ -99,6 +99,16 @@ class State {
 		return availableTasks.isEmpty() && transportedTasks.isEmpty();
 	}
 	
+	public Double heuristic() {
+//		Double heuristic = 0;
+//				
+//		for (Task task: transportedTasks) {
+//			
+//		}
+//		
+		return 0.0;
+	}
+	
 	@Override
 	public String toString() {
 		return "At " + currentCity + " with tasks [" + transportedTasks + " and capacity " + capacity + ". Leftover tasks are " + availableTasks; 

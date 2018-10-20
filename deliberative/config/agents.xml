@@ -10,4 +10,38 @@
 		<set algorithm="BFS"/>
 	</agent>
 	
+	<agent name="deliberative-bfs-first">
+		<set class-path="bin/"/>
+		<set class-name="template.DeliberativeTemplate"/>
+		<set algorithm="BFS"/>
+		<set stop="First"/>
+	</agent>
+	
+	<agent name="deliberative-bfs-best">
+		<set class-path="bin/"/>
+		<set class-name="template.DeliberativeTemplate"/>
+		<set algorithm="BFS"/>
+		<set stop="Best"/>
+	</agent>
+	
+	<agent name="deliberative-astar-first">
+		<set class-path="bin/"/>
+		<set class-name="template.DeliberativeTemplate"/>
+		<set algorithm="AStar"/>
+		<set stop="First"/>
+	</agent>
+	
+	<agent name="deliberative-astar-best">
+		<set class-path="bin/"/>
+		<set class-name="template.DeliberativeTemplate"/>
+		<set algorithm="AStar"/>
+		<set stop="Best"/>
+	</agent>
+	
+	<agent name="deliberative-naive">
+		<set class-path="bin/"/>
+		<set class-name="template.DeliberativeTemplate"/>
+		<set algorithm="Naive"/>
+	</agent>
+	
 </agents>
