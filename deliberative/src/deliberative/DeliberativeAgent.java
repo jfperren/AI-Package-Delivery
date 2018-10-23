@@ -1,4 +1,4 @@
-package template;
+package deliberative;
 
 /* import table */
 import logist.simulation.Vehicle;
@@ -28,7 +28,7 @@ import logist.topology.Topology.City;
  * An optimal planner for one vehicle.
  */
 @SuppressWarnings("unused")
-public class DeliberativeTemplate implements DeliberativeBehavior {
+public class DeliberativeAgent implements DeliberativeBehavior {
 	
 	enum Algorithm { BFS, ASTAR, NAIVE }
 	enum Stop { FIRST, BEST }
@@ -69,11 +69,9 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 
 		// Compute the plan with the selected algorithm.
 		switch (algorithm) {
-		case ASTAR:
-			plan = AStarPlan(vehicle, tasks, stop, new Logger());
-			break;
+		case ASTAR: 
 		case BFS:
-			plan = BFSPlan(vehicle, tasks, stop, new Logger());
+			plan = plan(vehicle, tasks, stop, new Logger());
 			break;
 		case NAIVE:
 			plan = naivePlan(vehicle, tasks, new Logger());
@@ -110,28 +108,56 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 			current = task.deliveryCity;
 		}
 		
-		logger.logResults(plan);
+		logger.logResults(plan, vehicle);
 		
 		return plan;
 	}
 	
-	private Plan BFSPlan(Vehicle vehicle, TaskSet tasks, Stop stop, Logger logger) {
-		
+	private Plan plan(Vehicle vehicle, TaskSet tasks, Stop stop, Logger logger) {
 		
 		State initialState = new State(vehicle, tasks);
-		logger.initialize("BFS (" + stop + ")");
 		
 		Map<State, State> parents = new HashMap<State, State>();
 		Map<State, Action> causes = new HashMap<State, Action>();
 		
-		Map<State, Double> costs = new HashMap<State, Double>(); 
+		final Map<State, Double> costs = new HashMap<State, Double>();
 		costs.put(initialState, 0.0);
+		
+		final Map<State, Double> f;
+		Queue<State> queue;
+		
+		switch (algorithm) {
+		case ASTAR:
+			
+			logger.initialize("A-Star (" + stop + ")");
+			
+			f = new HashMap<State, Double>();
+			f.put(initialState, initialState.heuristic(vehicle));
+			
+			queue = new PriorityQueue<State>(new Comparator<State>() {
+				
+				@Override
+				public int compare(State lhs, State rhs) {
+					return f.get(lhs).compareTo(f.get(rhs));
+				}
+			});
+			break;
+			
+		case BFS:
+			
+			f = null;
+			logger.initialize("BFS (" + stop + ")");
+			queue = new ArrayDeque<State>();
+			break;
+			
+		default:
+			throw new AssertionError("Should not happen.");
+		}
+		
+		queue.add(initialState);
 		
 		Double bestCost = Double.POSITIVE_INFINITY;
 		State goal = null;
-		
-		Queue<State> queue = new ArrayDeque<State>();
-		queue.add(initialState);
 		
 		do {
 			State state = queue.poll();
@@ -179,6 +205,10 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 				costs.put(child, childCost);
 				causes.put(child, action);
 				
+				if (algorithm == Algorithm.ASTAR) {
+					f.put(child, childCost + child.heuristic(vehicle));
+				}
+				
 				// Enqueue the child
 				queue.add(child);
 			}
@@ -190,97 +220,7 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 		
 		Plan plan = reconstructPlan(goal, vehicle.getCurrentCity(), causes, parents);
 				
-		logger.logResults(plan);
-		
-		return plan;
-	}
-	
-	public Plan AStarPlan(Vehicle vehicle, TaskSet tasks, Stop stop, Logger logger) {
-		
-		State initialState = new State(vehicle, tasks);
-		logger.initialize("A-Star (" + stop + ")");
-		
-		Map<State, State> parents = new HashMap<State, State>();
-		Map<State, Action> causes = new HashMap<State, Action>();
-		
-		final Map<State, Double> f = new HashMap<State, Double>();
-		f.put(initialState, initialState.heuristic(vehicle));
-		
-		final Map<State, Double> g = new HashMap<State, Double>();
-		g.put(initialState, 0.0);
-		
-		Double bestCost = Double.POSITIVE_INFINITY;
-		State goal = null;
-		
-		Queue<State> queue = new PriorityQueue<State>(new Comparator<State>() {
-			
-			@Override
-			public int compare(State lhs, State rhs) {
-				return f.get(lhs).compareTo(f.get(rhs));
-			}
-		});
-		
-		queue.add(initialState);
-		
-		int count = 0;
-		
-		do {
-			State state = queue.poll();
-			Double cost = g.get(state);
-			
-			logger.increment();
-			
-			// If the state is a final state, and its cost is lower than
-			// any previous plan so far, we mark it as new goal state.
-			if (state.isFinal( )&& g.get(state) < bestCost) {
-				bestCost = g.get(state);
-				goal = state;
-				
-				if (stop == Stop.FIRST) {
-					break;
-				}
-			}
-			
-			for (Tuple<State, Action> tuple: state.nextStates()) {
-				
-				State child = tuple.x;
-				Action action = tuple.y;
-		
-				Double distance = state.currentCity.distanceTo(child.currentCity);
-				Double childCost = cost + distance * vehicle.costPerKm();
-				
-				// If the cost at the child state is higher than the total cost of the 
-				// best plan found so far, we can simply skip this child.
-				if (childCost > bestCost) {
-					continue;
-				}
-				
-				// Here, we should check if the state was already visited. If this is the case,
-				// we see what was the cost last time this state was visited. If we get a lower
-				// cost this time, we continue. Otherwise, it's a dead-end so we can skip it.
-				if (g.containsKey(child)) { // The child state was already visited.
-					continue;
-				}
-				
-				// Here, we write the action that caused this state, its cost and its parent.
-				// This is all so that we can retrieve the information when reconstructing
-				// the plan from the last state without having to keep a copy of all the
-				// parents in every single node.
-				parents.put(child, state);
-				g.put(child, childCost);
-				f.put(child, childCost + child.heuristic(vehicle));
-				
-				causes.put(child, action);
-				
-				// Enqueue the child
-				queue.add(child);
-			}
-		} while (!queue.isEmpty() && count < 100000);
-		
-		
-		Plan plan = reconstructPlan(goal, vehicle.getCurrentCity(), causes, parents);
-		
-		logger.logResults(plan);
+		logger.logResults(plan, vehicle);
 		
 		return plan;
 	}
@@ -308,10 +248,6 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 	@Override
 	public void planCancelled(TaskSet carriedTasks) {
 		
-		if (!carriedTasks.isEmpty()) {
-			// This cannot happen for this simple agent, but typically
-			// you will need to consider the carriedTasks when the next
-			// plan is computed.
-		}
+		// No need to do anything here as we already use `vehicle.getCurrentTasks()` in our state.
 	}
 }

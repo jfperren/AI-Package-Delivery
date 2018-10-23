@@ -1,4 +1,4 @@
-package template;
+package deliberative;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,34 +23,22 @@ public class Graph<Node> {
 		
 	}
 	
-	private Node root(Node child, Map<Node, Node> parents) {
-		
-		Node node = child;
-		
-		while (parents.get(node) != null) {
-			node = parents.get(node);
-		} 
-		
-		return node;
-	}
-	
 	public double mstWeight() {
 		
-		PriorityQueue<Edge<Node>> edgesToVisit = new PriorityQueue<Edge<Node>>(edges);
-		Map<Node, Node> parents = new HashMap<Node, Node>();
-		
+		PriorityQueue<Edge<Node>> edgesToVisit = new PriorityQueue<Edge<Node>>(edges);		
 		double totalWeight = 0;
+		DisjointSet<Node> set = new DisjointSet<Node>();
 
 		while (!edgesToVisit.isEmpty()) {
 			
 			Edge<Node> edge = edgesToVisit.poll();
-						
-			Node rootA = root(edge.a, parents);
-			Node rootB = root(edge.b, parents);
+			
+			Node rootA = set.root(edge.a);
+			Node rootB = set.root(edge.b);
 			
 			if (rootA != rootB) {
 				totalWeight += edge.weight;
-				parents.put(rootA, rootB);
+				set.connect(rootA, rootB);
 			}
 		}
 		
@@ -106,11 +94,8 @@ public class Graph<Node> {
 		
 		private Map<E, E> parents = new HashMap<E, E>();
 		
-		
-		
 		public E root(E elem) {
 			return rootAndDepth(elem).x;
-			
 		}
 		
 		public int depth(E elem) {

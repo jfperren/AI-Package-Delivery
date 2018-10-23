@@ -1,4 +1,4 @@
-package template;
+package deliberative;
 
 public class Tuple<X, Y> { 
 	
