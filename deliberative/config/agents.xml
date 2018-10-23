@@ -4,10 +4,46 @@
 	<!-- A list of agents and their behavior classes -->
 	
 	<!-- #### DELIBERATIVE AGENTS ### -->
-	<agent name="deliberative-random">
+	
+	<agent name="deliberative-main">
+		<set class-path="bin/"/>
+		<set class-name="deliberative.DeliberativeAgent"/>
+		<set algorithm="ASTAR"/>
+		<set stop="Best"/>
+	</agent>
+	
+	<agent name="deliberative-bfs-first">
+		<set class-path="bin/"/>
+		<set class-name="deliberative.DeliberativeAgent"/>
+		<set algorithm="BFS"/>
+		<set stop="First"/>
+	</agent>
+	
+	<agent name="deliberative-bfs-best">
+		<set class-path="bin/"/>
+		<set class-name="deliberative.DeliberativeAgent"/>
+		<set algorithm="BFS"/>
+		<set stop="Best"/>
+	</agent>
+	
+	<agent name="deliberative-astar-first">
 		<set class-path="bin/"/>
 		<set class-name="template.DeliberativeTemplate"/>
-		<set algorithm="BFS"/>
+		<set algorithm="AStar"/>
+		<set stop="First"/>
+	</agent>
+	
+	<agent name="deliberative-astar-best">
+		<set class-path="bin/"/>
+		<set class-name="deliberative.DeliberativeAgent"/>
+		<set algorithm="AStar"/>
+		<set stop="Best"/>
+	</agent>
+	
+	<agent name="deliberative-naive">
+		<set class-path="bin/"/>
+		<set class-name="deliberative.DeliberativeAgent"/>
+		<set algorithm="Naive"/>
 	</agent>
 	
 </agents>
