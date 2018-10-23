@@ -9,7 +9,7 @@
 		<set class-path="bin/"/>
 		<set class-name="deliberative.DeliberativeAgent"/>
 		<set algorithm="ASTAR"/>
-		<set stop="Best"/>
+		<set stop="First"/>
 	</agent>
 	
 	<agent name="deliberative-bfs-first">
@@ -28,7 +28,7 @@
 	
 	<agent name="deliberative-astar-first">
 		<set class-path="bin/"/>
-		<set class-name="template.DeliberativeTemplate"/>
+		<set class-name="deliberative.DeliberativeAgent"/>
 		<set algorithm="AStar"/>
 		<set stop="First"/>
 	</agent>

@@ -193,7 +193,8 @@ public class DeliberativeAgent implements DeliberativeBehavior {
 				// Here, we should check if the state was already visited. If this is the case,
 				// we see what was the cost last time this state was visited. If we get a lower
 				// cost this time, we continue. Otherwise, it's a dead-end so we can skip it.
-				if (costs.containsKey(child) && childCost >= costs.get(state)) { // The child state was already visited.
+				if (costs.containsKey(child) 
+					|| (algorithm == Algorithm.ASTAR && childCost >= costs.get(child))) { // The child state was already visited.
 					continue;
 				}
 				
