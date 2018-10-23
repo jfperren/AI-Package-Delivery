@@ -13,3 +13,4 @@ deliberative/.idea/
 deliberative/reactive.iml
 deliberative/history.xml
 deliberative/src/.DS_Store
+deliberative/out/*
