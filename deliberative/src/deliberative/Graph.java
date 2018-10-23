@@ -56,11 +56,7 @@ public class Graph<Node> {
 				City city = cityArray.get(i);
 				City otherCity = cityArray.get(j);
 				
-				double dx = otherCity.xPos - city.xPos;
-				double dy = otherCity.yPos - city.yPos;
-				double distance = Math.sqrt(dx * dx + dy *  dy);
-				
-				edges.add(new Edge<City>(city, otherCity, distance));
+				edges.add(new Edge<City>(city, otherCity, city.distanceTo(otherCity)));
 			}
 		}
 		
