@@ -31,7 +31,7 @@
 				<set color="#0000ff" />
 				<set home="Lausanne" />
 				<set speed="90" />
-				<set capacity="1" />
+				<set capacity="3" />
 				<set cost-per-km="5" />
 			</vehicle>
 		</company>
@@ -42,7 +42,7 @@
 				<set color="#ff0000" />
 				<set home="Zürich" />
 				<set speed="90" />
-				<set capacity="36" />
+				<set capacity="3" />
 				<set cost-per-km="5" />
 			</vehicle>
 		</company>
@@ -53,7 +53,7 @@
 				<set color="#00ff00" />
 				<set home="Bern" />
 				<set speed="90" />
-				<set capacity="9" />
+				<set capacity="3" />
 				<set cost-per-km="5" />
 			</vehicle>
 		</company>
@@ -64,7 +64,7 @@
 				<set color="#ffff00" />
 				<set home="Basel" />
 				<set speed="90" />
-				<set capacity="9" />
+				<set capacity="3" />
 				<set cost-per-km="5" />
 			</vehicle>
 		</company>
@@ -75,7 +75,7 @@
 				<set color="#ff00ff" />
 				<set home="Thun" />
 				<set speed="220" />
-				<set capacity="9" />
+				<set capacity="3" />
 				<set cost-per-km="5" />
 			</vehicle>
 		</company>
@@ -86,7 +86,7 @@
 				<set color="#00ffff" />
 				<set home="Luzern" />
 				<set speed="220" />
-				<set capacity="9" />
+				<set capacity="3" />
 				<set cost-per-km="5" />
 			</vehicle>
 		</company>

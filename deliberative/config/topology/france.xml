@@ -27,6 +27,7 @@
 		<route distance="149" from="Lyon" to="Genève"/>
 		<route distance="316" from="Lyon" to="Marseille"/>
 		<route distance="646" from="Bordeaux" to="Marseille"/>
+		<route distance="6460" from="Bordeaux" to="Monaco"/>
 		<route distance="588" from="Bordeaux" to="Lyon"/>
 		<route distance="521" from="Monaco" to="Genève"/>
 		<route distance="225" from="Marseille" to="Monaco"/>
