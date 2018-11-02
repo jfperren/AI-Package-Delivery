@@ -1,4 +1,4 @@
-*/.DS_Store
+*.DS_Store
 reactive/bin/*
 reactive/.project
 reactive/.classpath
@@ -14,3 +14,11 @@ deliberative/reactive.iml
 deliberative/history.xml
 deliberative/src/.DS_Store
 deliberative/out/*
+centralized/bin/*
+centralized/.project
+centralized/.classpath
+centralized/.idea/
+centralized/reactive.iml
+centralized/history.xml
+centralized/src/.DS_Store
+centralized/out/*
