@@ -1,11 +1,8 @@
 package template;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -96,35 +93,56 @@ public class ConstraintOptimizationProblem {
 	
 	public List<Plan> solve(double timeout, double p) {
 		
-		Assignment assignment = initialAssignment(0);
-		double cost = assignment.cost();
+		Assignment assignment = initialAssignment(random.nextInt());
+		Assignment globalBestAssignment = assignment;	
 		
-		Assignment globalBestAssignment = assignment;		
-		double globalBestCost = assignment.cost();
+		double cost = assignment.cost();
+		double globalBestCost = cost;	
+		double localBestCost = cost;
 		
 		long now = System.currentTimeMillis();
 		
+		int resetCounter = 0;
+		int counter = 0;
+		
 		while (System.currentTimeMillis() - now < 0.8 * timeout) {
 			
-			Assignment nextAssignment = assignment.chooseNext();
-			double nextAssignmentCost = assignment.cost();
+			Assignment nextAssignment = assignment.chooseNext(random);
+			double nextAssignmentCost = nextAssignment.cost();
 			
-			if (nextAssignmentCost < cost) {
+			double p_better = 1.0;
+			double p_worse = 3.0;
+			double rnd = random.nextDouble();
+			
+			if ((nextAssignmentCost <= cost && rnd < p_better) || rnd < p_worse) {
 				assignment = nextAssignment;
 				cost = nextAssignmentCost;
-			} else {
-								
-				if (random.nextDouble() < p) {
-					assignment = nextAssignment;
-					cost = nextAssignmentCost;
-				}
 			}
 			
-			
+			if (cost < localBestCost) {
+				localBestCost = cost;
+				resetCounter = 0;
+			} else {
+				resetCounter++;
+			}
+
 			if (cost < globalBestCost) {
 				globalBestAssignment = assignment;
 				globalBestCost = cost;
-			} 
+			}
+			
+			if (resetCounter > 900) {
+				assignment = initialAssignment(random.nextInt());
+				cost = assignment.cost();
+				localBestCost = cost;
+				resetCounter = 0;
+			}
+			
+			if (counter % 10 == 0) {
+				System.out.println(counter + "|" + resetCounter + "|" + cost + "|" + globalBestCost + "|" + assignment.hashCode() + "|" + p_worse);
+			}	
+			
+			counter++;
 		}
 		
 		return globalBestAssignment.getPlans();
@@ -155,6 +173,11 @@ public class ConstraintOptimizationProblem {
 			}
 			
 			return result;
+		}
+		
+		@Override
+		public int hashCode() {
+			return toString().hashCode();
 		}
 		
 		// ------
@@ -193,22 +216,26 @@ public class ConstraintOptimizationProblem {
 			return neighbors.get(random.nextInt(neighbors.size()));
 		}
 		
-		public Assignment chooseNext() {
+		public Assignment chooseNext(Random random) {
 						
 			double bestCost = Double.POSITIVE_INFINITY;
-			Assignment bestAssignment = null;
+			List<Assignment> bestAssignment = new ArrayList<Assignment>();
 			
 			for (Assignment assignment: neighbors()) {
 				
 				double cost = assignment.cost();
 				
-				if (cost < bestCost) {
+				if (cost <= bestCost) {
+										
 					bestCost = cost;
-					bestAssignment = assignment;
+					bestAssignment.clear();
+					bestAssignment.add(assignment);
+				} else if (cost == bestCost) {
+					bestAssignment.add(assignment);
 				}
 			}
 			
-			return bestAssignment;
+			return bestAssignment.get(random.nextInt(bestAssignment.size()));
 		}
 		
 		/** Calculate the total cost of a given assignment. If the assignment does not satisfy the
@@ -259,8 +286,7 @@ public class ConstraintOptimizationProblem {
 							return Double.POSITIVE_INFINITY;
 						}
 						
-						deliveryStatus.put(action.taskId(), 2);
-						
+						deliveryStatus.put(action.taskId(), 2);	
 					}
 				}
 			}
@@ -305,7 +331,7 @@ public class ConstraintOptimizationProblem {
 			
 			return neighbors;
 		}
-		
+	
 		public List<Assignment> move(Label beforePickup, Label beforeDelivery) {
 			
 			List<Assignment> assignments = new ArrayList<Assignment>();
@@ -339,27 +365,31 @@ public class ConstraintOptimizationProblem {
 						
 						for (Label newBeforeDelivery = newBeforePickup; !newBeforeDelivery.isEnd(); newBeforeDelivery = newPlan.get(newBeforeDelivery)) {			
 							
-							Map<Label, Label> newPlan2 = new HashMap<Label, Label>();
-							newPlan2.putAll(newPlan);
+							if (newBeforeDelivery != beforeDelivery || newBeforePickup != beforePickup) {
 							
-							// We save the next nodes after the insertion
+								Map<Label, Label> newPlan2 = new HashMap<Label, Label>();
+								newPlan2.putAll(newPlan);
+								
+								// We save the next nodes after the insertion
+								
+								Label newAfterPickup = newPlan2.get(newBeforePickup);
+								Label newAfterDelivery = newPlan2.get(newBeforeDelivery);
+								
+								// Then, we add them back in this new location
+								
+								newPlan2.put(newBeforePickup, pickup);
+								newPlan2.put(delivery, newAfterDelivery);
+								
+								if (newBeforePickup == newBeforeDelivery) {
+									newPlan2.put(pickup, delivery);
+								} else {
+									newPlan2.put(pickup, newAfterPickup);
+									newPlan2.put(newBeforeDelivery, delivery);
+								}
 							
-							Label newAfterPickup = newPlan2.get(newBeforePickup);
-							Label newAfterDelivery = newPlan2.get(newBeforeDelivery);
 							
-							// Then, we add them back in this new location
-							
-							newPlan2.put(newBeforePickup, pickup);
-							newPlan2.put(delivery, newAfterDelivery);
-							
-							if (newBeforePickup == newBeforeDelivery) {
-								newPlan2.put(pickup, delivery);
-							} else {
-								newPlan2.put(pickup, newAfterPickup);
-								newPlan2.put(newBeforeDelivery, delivery);
+								assignments.add(new Assignment(newPlan2));
 							}
-							
-							assignments.add(new Assignment(newPlan2));
 						}
 					}
 				}
