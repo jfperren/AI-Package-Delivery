@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Collections;
 
 import logist.plan.Plan;
@@ -22,7 +23,11 @@ public class ConstraintOptimizationProblem {
 	private List<PickupLabel> pickups = new ArrayList<PickupLabel>();
 	private List<DeliveryLabel> deliveries = new ArrayList<DeliveryLabel>();
 	
-	public ConstraintOptimizationProblem(List<Vehicle> vehicles, TaskSet tasks) {
+	private Random random;
+	
+	public ConstraintOptimizationProblem(List<Vehicle> vehicles, TaskSet tasks, int seed) {
+		
+		random = new Random(seed);
 		
 		for (Vehicle vehicle: vehicles) {
 			this.vehicles.add(new VehicleLabel(vehicle));
@@ -48,7 +53,7 @@ public class ConstraintOptimizationProblem {
 			}
 		}
 		
-		int index = (int) Math.floor(Math.random() * capableVehicles.size());
+		int index = (int) Math.floor(random.nextInt(capableVehicles.size()));
 		
 		return capableVehicles.get(index);
 	}
@@ -61,7 +66,7 @@ public class ConstraintOptimizationProblem {
 			indices.add(i);
 		}
 		
-		Collections.shuffle(indices);
+		Collections.shuffle(indices, random);
 		return indices;
 	}
 	
@@ -89,20 +94,40 @@ public class ConstraintOptimizationProblem {
 		return new Assignment(next);
 	}
 	
-	public List<Plan> solve(int numIteration) {
+	public List<Plan> solve(double timeout, double p) {
 		
 		Assignment assignment = initialAssignment(0);
+		double cost = assignment.cost();
 		
-		for (int i = 0; i < 50; i++) {
+		Assignment globalBestAssignment = assignment;		
+		double globalBestCost = assignment.cost();
+		
+		long now = System.currentTimeMillis();
+		
+		while (System.currentTimeMillis() - now < 0.8 * timeout) {
 			
 			Assignment nextAssignment = assignment.chooseNext();
+			double nextAssignmentCost = assignment.cost();
 			
-			if (1 > 0.5) {
+			if (nextAssignmentCost < cost) {
 				assignment = nextAssignment;
+				cost = nextAssignmentCost;
+			} else {
+								
+				if (random.nextDouble() < p) {
+					assignment = nextAssignment;
+					cost = nextAssignmentCost;
+				}
 			}
+			
+			
+			if (cost < globalBestCost) {
+				globalBestAssignment = assignment;
+				globalBestCost = cost;
+			} 
 		}
 		
-		return assignment.getPlans();
+		return globalBestAssignment.getPlans();
 	}
 	
 	class Assignment {
@@ -163,8 +188,13 @@ public class ConstraintOptimizationProblem {
 			return plans;
 		}
 		
+		public Assignment randomNeighbor() {
+			List<Assignment> neighbors = neighbors();
+			return neighbors.get(random.nextInt(neighbors.size()));
+		}
+		
 		public Assignment chooseNext() {
-			
+						
 			double bestCost = Double.POSITIVE_INFINITY;
 			Assignment bestAssignment = null;
 			
@@ -249,13 +279,16 @@ public class ConstraintOptimizationProblem {
 			
 			List<Assignment> neighbors = new ArrayList<Assignment>();
 			
+			
+			Label randomPickup = pickups.get(random.nextInt(pickups.size()));
+			
 			for (Label vehicle: vehicles) {
 				
 				for (Label beforePickup = vehicle; !successors.get(beforePickup).isEnd(); beforePickup = successors.get(beforePickup)) {
 					
 					Label pickupCandidate = successors.get(beforePickup);
 					
-					if (pickupCandidate.isPickup()) {
+					if (pickupCandidate == randomPickup) {
 						
 						for (Label beforeDelivery = successors.get(beforePickup); !successors.get(beforeDelivery).isEnd(); beforeDelivery = successors.get(beforeDelivery)) {
 							
