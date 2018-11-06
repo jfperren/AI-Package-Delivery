@@ -49,7 +49,7 @@ public class CentralizedTemplate implements CentralizedBehavior {
         // the setup method cannot last more than timeout_setup milliseconds
 //        timeout_setup = //ls.get(LogistSettings.TimeoutKey.SETUP);
         // the plan method cannot execute more than timeout_plan milliseconds
-        timeout_plan = 60000;//ls.get(LogistSettings.TimeoutKey.PLAN);
+        timeout_plan = 4000;//ls.get(LogistSettings.TimeoutKey.PLAN);
         
         this.topology = topology;
         this.distribution = distribution;
@@ -60,7 +60,11 @@ public class CentralizedTemplate implements CentralizedBehavior {
     public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
         long time_start = System.currentTimeMillis();
         
-        List<Plan> plans = new ConstraintOptimizationProblem(vehicles, tasks, 2).solve(timeout_plan, 0.3);
+        double timeout = 0.95 * timeout_plan;
+        double p = 0.3;
+        int nReset = 200;
+        
+        List<Plan> plans = new ConstraintOptimizationProblem(vehicles, tasks, 2).solve(timeout, p, nReset);
   
         long time_end = System.currentTimeMillis();
         long duration = time_end - time_start;
@@ -73,6 +77,7 @@ public class CentralizedTemplate implements CentralizedBehavior {
         }
        
         System.out.println("Total cost is " + reward);
+//        System.out.println(plans)
         
         return plans;
     }

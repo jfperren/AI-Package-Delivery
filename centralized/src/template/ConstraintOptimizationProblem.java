@@ -91,7 +91,7 @@ public class ConstraintOptimizationProblem {
 		return new Assignment(next);
 	}
 	
-	public List<Plan> solve(double timeout, double p) {
+	public List<Plan> solve(double timeout, double p, int nReset) {
 		
 		Assignment assignment = initialAssignment(random.nextInt());
 		Assignment globalBestAssignment = assignment;	
@@ -105,16 +105,12 @@ public class ConstraintOptimizationProblem {
 		int resetCounter = 0;
 		int counter = 0;
 		
-		while (System.currentTimeMillis() - now < 0.8 * timeout) {
+		while (System.currentTimeMillis() - now < timeout) {
 			
 			Assignment nextAssignment = assignment.chooseNext(random);
 			double nextAssignmentCost = nextAssignment.cost();
 			
-			double p_better = 1.0;
-			double p_worse = 3.0;
-			double rnd = random.nextDouble();
-			
-			if ((nextAssignmentCost <= cost && rnd < p_better) || rnd < p_worse) {
+			if (nextAssignmentCost <= cost || random.nextDouble() < p) {
 				assignment = nextAssignment;
 				cost = nextAssignmentCost;
 			}
@@ -131,7 +127,7 @@ public class ConstraintOptimizationProblem {
 				globalBestCost = cost;
 			}
 			
-			if (resetCounter > 900) {
+			if (resetCounter > nReset) {
 				assignment = initialAssignment(random.nextInt());
 				cost = assignment.cost();
 				localBestCost = cost;
@@ -139,11 +135,13 @@ public class ConstraintOptimizationProblem {
 			}
 			
 			if (counter % 10 == 0) {
-				System.out.println(counter + "|" + resetCounter + "|" + cost + "|" + globalBestCost + "|" + assignment.hashCode() + "|" + p_worse);
+				System.out.println(counter + "|" + resetCounter + "|" + cost + "|" + globalBestCost + "|" + assignment.hashCode());
 			}	
 			
 			counter++;
 		}
+		
+		System.out.println(globalBestAssignment);
 		
 		return globalBestAssignment.getPlans();
 	}
@@ -361,7 +359,7 @@ public class ConstraintOptimizationProblem {
 					
 					load += newBeforePickup.weightChange();
 					
-					if (load + pickup.weightChange() < vehicle.capacity()) {
+					if (load + pickup.weightChange() <= vehicle.capacity()) {
 						
 						for (Label newBeforeDelivery = newBeforePickup; !newBeforeDelivery.isEnd(); newBeforeDelivery = newPlan.get(newBeforeDelivery)) {			
 							
