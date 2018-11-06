@@ -163,14 +163,23 @@ public class ConstraintOptimizationProblem {
 		public String toString() {
 			
 			String result = "- Plan -\n";
-			
+
+			List<String> taskCounts = new ArrayList<>();
 			for (Label vehicle: vehicles) {
+			    int taskCount = 0;
 				for (Label action = vehicle; !action.isEnd(); action = successors.get(action)) {
+					taskCount++;
 					result = result + action +  " - ";
 				}
+				taskCount--;
+				taskCount/=2;
+
+				taskCounts.add(String.valueOf(taskCount));
 				
-				result += "Done \n";
+				result += "Done. \n";
 			}
+
+			result += "Task repartition : " + String.join("/", taskCounts) + "\n";
 			
 			return result;
 		}
