@@ -28,9 +28,9 @@ import logist.topology.Topology.City;
 public class CentralizedTemplate implements CentralizedBehavior {
 	
 	private static final double TIMEOUT_RATIO = 0.95;
-	private static final double PROBABILITY_WORSE_CASE = 0.3;
-	private static final int N_ITER_BEFORE_RESET = 200;
-	private static final int NEIGHBORHOOD_SIZE = 100;
+	private static final double PROBABILITY_WORSE_CASE = 0.0;
+	private static final int N_ITER_BEFORE_RESET = 300;
+	private static final int NEIGHBORHOOD_SIZE = 10;
 	
     private Topology topology;
     private TaskDistribution distribution;

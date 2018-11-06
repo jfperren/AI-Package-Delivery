@@ -109,7 +109,7 @@ public class ConstraintOptimizationProblem {
 		
 		while (System.currentTimeMillis() - now < timeout) {
 			
-			Assignment nextAssignment = assignment.chooseNext(random, neighborhoodSize);
+			Assignment nextAssignment = assignment.chooseNext(neighborhoodSize);
 			double nextAssignmentCost = nextAssignment.cost();
 			
 			if (nextAssignmentCost <= cost || random.nextDouble() < p) {
@@ -225,24 +225,30 @@ public class ConstraintOptimizationProblem {
 			return neighbors.get(random.nextInt(neighbors.size()));
 		}
 		
-		public Assignment chooseNext(Random random, int size) {
+		public Assignment chooseNext(int size) {
 						
 			double bestCost = Double.POSITIVE_INFINITY;
 			List<Assignment> bestAssignment = new ArrayList<Assignment>();
 			
-			for (Assignment assignment: neighbors(size)) {
-				
-				double cost = assignment.cost();
-				
-				if (cost <= bestCost) {
-										
-					bestCost = cost;
-					bestAssignment.clear();
-					bestAssignment.add(assignment);
-				} else if (cost == bestCost) {
-					bestAssignment.add(assignment);
+			do {
+				for (Assignment assignment: neighbors(size)) {
+
+					double cost = assignment.cost();
+					
+					if (cost == Double.POSITIVE_INFINITY) {
+						continue;
+					}
+					
+					if (cost <= bestCost) {
+						
+						bestCost = cost;
+						bestAssignment.clear();
+						bestAssignment.add(assignment);
+					} else if (cost == bestCost) {
+						bestAssignment.add(assignment);
+					}
 				}
-			}
+			} while (bestAssignment.size() == 0);
 			
 			return bestAssignment.get(random.nextInt(bestAssignment.size()));
 		}
