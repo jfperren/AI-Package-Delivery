@@ -26,7 +26,12 @@ import logist.topology.Topology.City;
  */
 @SuppressWarnings("unused")
 public class CentralizedTemplate implements CentralizedBehavior {
-
+	
+	private static final double TIMEOUT_RATIO = 0.95;
+	private static final double PROBABILITY_WORSE_CASE = 0.3;
+	private static final int N_ITER_BEFORE_RESET = 200;
+	private static final int NEIGHBORHOOD_SIZE = 100;
+	
     private Topology topology;
     private TaskDistribution distribution;
     private Agent agent;
@@ -40,16 +45,16 @@ public class CentralizedTemplate implements CentralizedBehavior {
         // this code is used to get the timeouts
         LogistSettings ls = null;
         try {
-            ls = Parsers.parseSettings("config\\settings_default.xml");
+            ls = Parsers.parseSettings("config/settings_default.xml");
         }
         catch (Exception exc) {
             System.out.println("There was a problem loading the configuration file.");
         }
         
         // the setup method cannot last more than timeout_setup milliseconds
-//        timeout_setup = //ls.get(LogistSettings.TimeoutKey.SETUP);
+        timeout_setup = ls.get(LogistSettings.TimeoutKey.SETUP);
         // the plan method cannot execute more than timeout_plan milliseconds
-        timeout_plan = 4000;//ls.get(LogistSettings.TimeoutKey.PLAN);
+        timeout_plan = ls.get(LogistSettings.TimeoutKey.PLAN);
         
         this.topology = topology;
         this.distribution = distribution;
@@ -59,12 +64,9 @@ public class CentralizedTemplate implements CentralizedBehavior {
     @Override
     public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
         long time_start = System.currentTimeMillis();
-        
-        double timeout = 0.95 * timeout_plan;
-        double p = 0.3;
-        int nReset = 200;
-        
-        List<Plan> plans = new ConstraintOptimizationProblem(vehicles, tasks, 2).solve(timeout, p, nReset);
+                
+        List<Plan> plans = new ConstraintOptimizationProblem(vehicles, tasks, 2).solve(
+        		TIMEOUT_RATIO * timeout_plan, PROBABILITY_WORSE_CASE, NEIGHBORHOOD_SIZE, N_ITER_BEFORE_RESET);
   
         long time_end = System.currentTimeMillis();
         long duration = time_end - time_start;
@@ -77,7 +79,6 @@ public class CentralizedTemplate implements CentralizedBehavior {
         }
        
         System.out.println("Total cost is " + reward);
-//        System.out.println(plans)
         
         return plans;
     }

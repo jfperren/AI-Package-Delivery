@@ -2,10 +2,12 @@ package template;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.Collections;
 
 import logist.plan.Plan;
@@ -91,7 +93,7 @@ public class ConstraintOptimizationProblem {
 		return new Assignment(next);
 	}
 	
-	public List<Plan> solve(double timeout, double p, int nReset) {
+	public List<Plan> solve(double timeout, double p, int neighborhoodSize, int nReset) {
 		
 		Assignment assignment = initialAssignment(random.nextInt());
 		Assignment globalBestAssignment = assignment;	
@@ -107,7 +109,7 @@ public class ConstraintOptimizationProblem {
 		
 		while (System.currentTimeMillis() - now < timeout) {
 			
-			Assignment nextAssignment = assignment.chooseNext(random);
+			Assignment nextAssignment = assignment.chooseNext(random, neighborhoodSize);
 			double nextAssignmentCost = nextAssignment.cost();
 			
 			if (nextAssignmentCost <= cost || random.nextDouble() < p) {
@@ -210,16 +212,16 @@ public class ConstraintOptimizationProblem {
 		}
 		
 		public Assignment randomNeighbor() {
-			List<Assignment> neighbors = neighbors();
+			List<Assignment> neighbors = neighbors(10);
 			return neighbors.get(random.nextInt(neighbors.size()));
 		}
 		
-		public Assignment chooseNext(Random random) {
+		public Assignment chooseNext(Random random, int size) {
 						
 			double bestCost = Double.POSITIVE_INFINITY;
 			List<Assignment> bestAssignment = new ArrayList<Assignment>();
 			
-			for (Assignment assignment: neighbors()) {
+			for (Assignment assignment: neighbors(size)) {
 				
 				double cost = assignment.cost();
 				
@@ -299,40 +301,54 @@ public class ConstraintOptimizationProblem {
 			return cost;
 		}
 		
-		public List<Assignment> neighbors() {
+		public List<Assignment> neighbors(int size) {
+			
+			Label beforePickup;
+			Label beforeDelivery = null;
+			
+			List<Label> allLabels = new ArrayList<Label>();
+			allLabels.addAll(successors.keySet());
+			
+			
+			do {
+				beforePickup = allLabels.get(random.nextInt(allLabels.size()));
+			} while (!successors.get(beforePickup).isPickup());
+			
+			for (Label label = beforePickup; !successors.get(label).isEnd(); label = successors.get(label)) {
+			
+				Label deliveryCandidate = successors.get(label);
+				
+				if (deliveryCandidate.isDelivery() && deliveryCandidate.taskId() == successors.get(beforePickup).taskId()) {
+					beforeDelivery = label;
+				}
+			}
+			
+			List<Label> availableLabels = new ArrayList<Label>();
+			availableLabels.addAll(successors.keySet());
+			Collections.shuffle(availableLabels, random);
 			
 			List<Assignment> neighbors = new ArrayList<Assignment>();
 			
-			
-			Label randomPickup = pickups.get(random.nextInt(pickups.size()));
-			
-			for (Label vehicle: vehicles) {
+			for (int i = 0; i < size; i++) {
 				
-				for (Label beforePickup = vehicle; !successors.get(beforePickup).isEnd(); beforePickup = successors.get(beforePickup)) {
-					
-					Label pickupCandidate = successors.get(beforePickup);
-					
-					if (pickupCandidate == randomPickup) {
-						
-						for (Label beforeDelivery = successors.get(beforePickup); !successors.get(beforeDelivery).isEnd(); beforeDelivery = successors.get(beforeDelivery)) {
-							
-							Label deliveryCandidate = successors.get(beforeDelivery);
-							
-							if (deliveryCandidate.isDelivery() && deliveryCandidate.taskId() == pickupCandidate.taskId()) {
-								
-								neighbors.addAll(move(beforePickup, beforeDelivery));
-							}
-						}
-					}	
+				if (availableLabels.isEmpty()) {
+					return neighbors;
 				}
+
+				Label newBeforePickup = availableLabels.get(availableLabels.size() - 1);
+				
+				for (Label newBeforeDelivery = newBeforePickup; !successors.get(newBeforeDelivery).isEnd(); newBeforeDelivery = successors.get(newBeforeDelivery)) {
+					
+					neighbors.add(move(beforePickup, beforeDelivery, newBeforePickup, newBeforeDelivery));
+				}
+			
+				availableLabels.remove(availableLabels.size() - 1);	
 			}
 			
 			return neighbors;
 		}
 	
-		public List<Assignment> move(Label beforePickup, Label beforeDelivery) {
-			
-			List<Assignment> assignments = new ArrayList<Assignment>();
+		public Assignment move(Label beforePickup, Label beforeDelivery, Label newBeforePickup, Label newBeforeDelivery) {
 			
 			Label pickup = successors.get(beforePickup);
 			Label delivery = successors.get(beforeDelivery);
@@ -351,49 +367,24 @@ public class ConstraintOptimizationProblem {
 				newPlan.put(beforeDelivery, afterDelivery);
 			}
 			
-			for (Label vehicle: vehicles) {
-				
-				int load = 0;
-				
-				for (Label newBeforePickup = vehicle; !newBeforePickup.isEnd(); newBeforePickup = newPlan.get(newBeforePickup)) {
-					
-					load += newBeforePickup.weightChange();
-					
-					if (load + pickup.weightChange() <= vehicle.capacity()) {
-						
-						for (Label newBeforeDelivery = newBeforePickup; !newBeforeDelivery.isEnd(); newBeforeDelivery = newPlan.get(newBeforeDelivery)) {			
-							
-							if (newBeforeDelivery != beforeDelivery || newBeforePickup != beforePickup) {
-							
-								Map<Label, Label> newPlan2 = new HashMap<Label, Label>();
-								newPlan2.putAll(newPlan);
-								
-								// We save the next nodes after the insertion
-								
-								Label newAfterPickup = newPlan2.get(newBeforePickup);
-								Label newAfterDelivery = newPlan2.get(newBeforeDelivery);
-								
-								// Then, we add them back in this new location
-								
-								newPlan2.put(newBeforePickup, pickup);
-								newPlan2.put(delivery, newAfterDelivery);
-								
-								if (newBeforePickup == newBeforeDelivery) {
-									newPlan2.put(pickup, delivery);
-								} else {
-									newPlan2.put(pickup, newAfterPickup);
-									newPlan2.put(newBeforeDelivery, delivery);
-								}
-							
-							
-								assignments.add(new Assignment(newPlan2));
-							}
-						}
-					}
-				}
+			// We save the next nodes after the insertion
+			
+			Label newAfterPickup = newPlan.get(newBeforePickup);
+			Label newAfterDelivery = newPlan.get(newBeforeDelivery);
+			
+			// Then, we add them back in this new location
+			
+			newPlan.put(newBeforePickup, pickup);
+			newPlan.put(delivery, newAfterDelivery);
+			
+			if (newBeforePickup == newBeforeDelivery) {
+				newPlan.put(pickup, delivery);
+			} else {
+				newPlan.put(pickup, newAfterPickup);
+				newPlan.put(newBeforeDelivery, delivery);
 			}
 			
-			return assignments;		
+			return new Assignment(newPlan);		
 		}
 	}
 	
