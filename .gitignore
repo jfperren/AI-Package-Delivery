@@ -22,3 +22,11 @@ centralized/reactive.iml
 centralized/history.xml
 centralized/src/.DS_Store
 centralized/out/*
+auction/bin/*
+auction/.project
+auction/.classpath
+auction/.idea/
+auction/reactive.iml
+auction/history.xml
+auction/src/.DS_Store
+auction/out/*
