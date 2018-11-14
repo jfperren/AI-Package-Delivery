@@ -1,4 +1,4 @@
-package template;
+package main;
 
 //the list of imports
 import java.util.ArrayList;
