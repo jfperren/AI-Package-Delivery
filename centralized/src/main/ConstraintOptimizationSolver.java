@@ -1,4 +1,4 @@
-package template;
+package main;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,7 +16,9 @@ import logist.task.Task;
 import logist.task.TaskSet;
 import logist.topology.Topology.City;
 
-public class ConstraintOptimizationProblem {
+public class ConstraintOptimizationSolver {
+	
+	private static final boolean LOG_RESULTS = false;
 	
 	private List<VehicleLabel> vehicles = new ArrayList<VehicleLabel>();
 	private List<PickupLabel> pickups = new ArrayList<PickupLabel>();
@@ -24,7 +26,10 @@ public class ConstraintOptimizationProblem {
 	
 	private Random random;
 	
-	public ConstraintOptimizationProblem(List<Vehicle> vehicles, TaskSet tasks, int seed) {
+	/**
+	 * Represent a constraint optimization solver for the pickup-and-delivery problem.
+	 */
+	public ConstraintOptimizationSolver(List<Vehicle> vehicles, TaskSet tasks, int seed) {
 		
 		random = new Random(seed);
 		
@@ -42,6 +47,10 @@ public class ConstraintOptimizationProblem {
 		}
 	}
 	
+	/**
+	 * Select a random vehicle within the list, making sure its capacity is at
+	 * least a given number. Used in the context of generating initial solutions.
+	 */
 	private VehicleLabel randomVehicleWithCapacityAtLeast(int capacity) {
 		
 		List<VehicleLabel> capableVehicles = new ArrayList<VehicleLabel>();
@@ -69,6 +78,10 @@ public class ConstraintOptimizationProblem {
 		return indices;
 	}
 	
+	/**
+	 * Create an initial assignment by iteratively going over the set of task and, for each,
+	 * assigning it to a random vehicle that will naively deliver before its other tasks.
+	 */
 	public Assignment initialAssignment(int seed) {
 		
 		Map<Label, Label> next = new HashMap<Label, Label>();
@@ -93,14 +106,26 @@ public class ConstraintOptimizationProblem {
 		return new Assignment(next);
 	}
 	
+	/**
+	 * Run the solver for the assigned configuration. 
+	 * 
+	 * @param timeout Number of miliseconds to run the solver for
+	 * @param p Probability of selecting a worse neighbor
+	 * @param neighborhoodSize Number of neighbors to create in each step
+	 * @param nReset Number of iterations before which resetting when stuck in
+	 * 		  local minimum.
+	 * @return The best assignment found in the given time.
+	 */
 	public List<Plan> solve(double timeout, double p, int neighborhoodSize, int nReset) {
 		
+		// Create a random assignment and use it a global best for now.
 		Assignment assignment = initialAssignment(random.nextInt());
 		Assignment globalBestAssignment = assignment;	
 		
+		// We calculate the cost and store it as current and global best.
 		double cost = assignment.cost();
 		double globalBestCost = cost;	
-		double localBestCost = cost;
+		double currentBestCost = cost;
 		
 		long now = System.currentTimeMillis();
 		
@@ -112,33 +137,39 @@ public class ConstraintOptimizationProblem {
 			Assignment nextAssignment = assignment.chooseNext(neighborhoodSize);
 			double nextAssignmentCost = nextAssignment.cost();
 			
+			// We always select the next assignment if its cost is lower or equal,
+			// otherwise we only do it with probability p.
 			if (nextAssignmentCost <= cost || random.nextDouble() < p) {
 				assignment = nextAssignment;
 				cost = nextAssignmentCost;
 			}
 			
-			if (cost < localBestCost) {
-				localBestCost = cost;
+			// If the cost is a new current minimum, we restart the reset counter.
+			if (cost < currentBestCost) {
+				currentBestCost = cost;
 				resetCounter = 0;
 			} else {
 				resetCounter++;
 			}
 
+			// If the cost is a new global minimum, we also store it.
 			if (cost < globalBestCost) {
 				globalBestAssignment = assignment;
 				globalBestCost = cost;
 			}
 			
+			// If we reached the counter, we reset to a new initialAssignment
 			if (resetCounter > nReset) {
 				assignment = initialAssignment(random.nextInt());
 				cost = assignment.cost();
-				localBestCost = cost;
+				currentBestCost = cost;
 				resetCounter = 0;
 			}
 			
-			if (counter % 10 == 0) {
-				System.out.println(counter + "|" + resetCounter + "|" + cost + "|" + globalBestCost + "|" + assignment.hashCode());
-			}	
+			// Log as we go if required
+			 if (LOG_RESULTS && counter % 10 == 0) {
+			     System.out.println(counter + "|" + resetCounter + "|" + cost + "|" + globalBestCost + "|" + assignment.hashCode());
+			 }	
 			
 			counter++;
 		}
@@ -148,6 +179,9 @@ public class ConstraintOptimizationProblem {
 		return globalBestAssignment.getPlans();
 	}
 	
+	/**
+	 * Represent an Assignment of variables within the ConstraintOptimizationProblem.
+	 */
 	class Assignment {
  			
 		// An assignment is uniquely defined by the mapping of successor states. Every other variable
@@ -165,11 +199,12 @@ public class ConstraintOptimizationProblem {
 			String result = "- Plan -\n";
 			
 			for (Label vehicle: vehicles) {
+				
 				for (Label action = vehicle; !action.isEnd(); action = successors.get(action)) {
 					result = result + action +  " - ";
 				}
 				
-				result += "Done \n";
+				result += "done\n";
 			}
 			
 			return result;
@@ -180,8 +215,9 @@ public class ConstraintOptimizationProblem {
 			return toString().hashCode();
 		}
 		
-		// ------
-		
+		/**
+		 * Create the logist plan corresponding to the Assignment of variables.
+		 */
 		public List<Plan> getPlans() {
 			
 			List<Plan> plans = new ArrayList<Plan>();
@@ -211,16 +247,20 @@ public class ConstraintOptimizationProblem {
 			return plans;
 		}
 		
-		public Assignment randomNeighbor() {
-			List<Assignment> neighbors = neighbors(10);
-			return neighbors.get(random.nextInt(neighbors.size()));
-		}
-		
+
+		/**
+		 * Generate a neighborhood of a given size and return the best assignment
+		 * within that neighborhood.
+		 */
 		public Assignment chooseNext(int size) {
 						
 			double bestCost = Double.POSITIVE_INFINITY;
 			List<Assignment> bestAssignment = new ArrayList<Assignment>();
 			
+			
+			// It is rare, but sometimes we get unlucky and generate only bad 
+			// neighbors (especially with low size). Therefore, we simply iterate
+			// until we find a neighborhood that has at least one correct assignment.
 			do {
 				for (Assignment assignment: neighbors(size)) {
 
@@ -244,21 +284,24 @@ public class ConstraintOptimizationProblem {
 			return bestAssignment.get(random.nextInt(bestAssignment.size()));
 		}
 		
-		/** Calculate the total cost of a given assignment. If the assignment does not satisfy the
+		/** 
+		 * 	Calculate the total cost of a given assignment. If the assignment does not satisfy the
 		 *  constraints, we simply return Double.POSITIVE_INFINITY.
+		 *  
+		 *  Note
+		 *  ----
+		 *  Because of the implementation of successors as a HashMap, there is already a number of 
+		 *  constraints which are already implicitely satisfied (e.g. X_time, the fact that two
+		 *  variables are not at the same position, etc..). Moreover, we  do not need to explicitely 
+		 *  check each one of the constraints defined mathematically, especially as this would be 
+		 *  O(n^2). Instead, we iterate over the whole plan and make  sure that it is consistent as we
+		 *  go, which effectively does the same but in O(n).
 		 */
 		public double cost() {
-			
-			// Important notes
-			// ---------------
-			//
-			// Because of the implementation of successors as a HashMap, there is already a number of 
-			// constraints which are already implicitely satisfied.
 						
-			// Initialize cost to 0.
 			double cost = 0;
 			
-			
+			// For each packet, this map contains 0 if it is not picked up, 1 if it is and 2 if delivered.
 			HashMap<Integer, Integer> deliveryStatus = new HashMap<Integer, Integer>();
 			
 			for (int i = 0; i < pickups.size(); i++) {
@@ -267,19 +310,25 @@ public class ConstraintOptimizationProblem {
 			
 			for (Label vehicle: vehicles) {
 				
+				// At the start, the vehicle has a load of 0.
 				int load = 0;
 				
 				for (Label action = vehicle; !action.isEnd(); action = successors.get(action)) {
 					
+					// Increase / Decrease weight
 					load += action.weightChange();
+					
+					// Add cost related to the travel
 					cost += action.distanceTo(successors.get(action)) * vehicle.costPerKm();
 										
 					if (action.isPickup()) {
 						
+						// Check that the task is available
 						if (deliveryStatus.get(action.taskId()) != 0) {
 							return Double.POSITIVE_INFINITY;
 						}
 						
+						// Check that we do not go over capacity
 						if (load > vehicle.capacity()) {
 							return Double.POSITIVE_INFINITY;
 						}
@@ -288,6 +337,7 @@ public class ConstraintOptimizationProblem {
 						
 					} else if (action.isDelivery()) {
 						
+						// Check that the task is picked up
 						if (deliveryStatus.get(action.taskId()) != 1) {
 							return Double.POSITIVE_INFINITY;
 						}
@@ -297,7 +347,7 @@ public class ConstraintOptimizationProblem {
 				}
 			}
 			
-			// Here, we check that all tasks have been delivered. 
+			// Check that all tasks have been delivered. 
 			for (int taskId: deliveryStatus.keySet()) {
 				if (deliveryStatus.get(taskId) != 2) {
 					return Double.POSITIVE_INFINITY;
@@ -307,6 +357,11 @@ public class ConstraintOptimizationProblem {
 			return cost;
 		}
 		
+		/**
+		 * Generate a random set of neighbors of a given size. The neighbors are 
+		 * generated by randomly selecting a task, and then randomly selecting
+		 * new positions for its pickup and delivery positions {size} times.
+		 */
 		public List<Assignment> neighbors(int size) {
 			
 			Label beforePickup;
@@ -315,11 +370,12 @@ public class ConstraintOptimizationProblem {
 			List<Label> allLabels = new ArrayList<Label>();
 			allLabels.addAll(successors.keySet());
 			
-			
+			// We select a random "pickup" label in the list
 			do {
 				beforePickup = allLabels.get(random.nextInt(allLabels.size()));
 			} while (!successors.get(beforePickup).isPickup());
 			
+			// Then, we iterate on the successors until we find its corresponding delivery action
 			for (Label label = beforePickup; !successors.get(label).isEnd(); label = successors.get(label)) {
 			
 				Label deliveryCandidate = successors.get(label);
@@ -329,6 +385,12 @@ public class ConstraintOptimizationProblem {
 				}
 			}
 			
+			// Now, we will randomly pick new positions out of the total
+			// set of possible positions, without replacement. Note that
+			// we do this by shuffling the list of labels once and then 
+			// dequeue the current last item for as long as we want. This
+			// ensures that the deletion of the randomly selected item is
+			// done in O(1). 
 			List<Label> availableLabels = new ArrayList<Label>();
 			availableLabels.addAll(successors.keySet());
 			Collections.shuffle(availableLabels, random);
@@ -337,14 +399,18 @@ public class ConstraintOptimizationProblem {
 			
 			for (int i = 0; i < size; i++) {
 				
+				// Stop if we don't have any unvisited position
 				if (availableLabels.isEmpty()) {
 					return neighbors;
 				}
 
+				// Dequeue the last position in the list
 				Label newBeforePickup = availableLabels.get(availableLabels.size() - 1);
 				
+				// Generate all assignments where the pickup is at the selected position
+				// and the delivery is after it.
 				for (Label newBeforeDelivery = newBeforePickup; !successors.get(newBeforeDelivery).isEnd(); newBeforeDelivery = successors.get(newBeforeDelivery)) {
-					
+				
 					neighbors.add(move(beforePickup, beforeDelivery, newBeforePickup, newBeforeDelivery));
 				}
 			
@@ -354,6 +420,10 @@ public class ConstraintOptimizationProblem {
 			return neighbors;
 		}
 	
+		/**
+		 * Generate the assignment resulting from moving the pickup and delivery actions to the
+		 * new positions.
+		 */
 		public Assignment move(Label beforePickup, Label beforeDelivery, Label newBeforePickup, Label newBeforeDelivery) {
 			
 			Label pickup = successors.get(beforePickup);

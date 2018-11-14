@@ -1,4 +1,4 @@
-package template;
+package main;
 
 //the list of imports
 import java.util.ArrayList;
@@ -25,11 +25,11 @@ import logist.topology.Topology.City;
  *
  */
 @SuppressWarnings("unused")
-public class CentralizedTemplate implements CentralizedBehavior {
+public class CentralizedAgent implements CentralizedBehavior {
 	
 	private static final double TIMEOUT_RATIO = 0.95;
-	private static final double PROBABILITY_WORSE_CASE = 0.0;
-	private static final int N_ITER_BEFORE_RESET = 300;
+	private static final double PROBABILITY_WORSE_CASE = 0.05;
+	private static final int N_ITER_BEFORE_RESET = 500;
 	private static final int NEIGHBORHOOD_SIZE = 10;
 	
     private Topology topology;
@@ -65,7 +65,7 @@ public class CentralizedTemplate implements CentralizedBehavior {
     public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
         long time_start = System.currentTimeMillis();
                 
-        List<Plan> plans = new ConstraintOptimizationProblem(vehicles, tasks, 2).solve(
+        List<Plan> plans = new ConstraintOptimizationSolver(vehicles, tasks, 0).solve(
         		TIMEOUT_RATIO * timeout_plan, PROBABILITY_WORSE_CASE, NEIGHBORHOOD_SIZE, N_ITER_BEFORE_RESET);
   
         long time_end = System.currentTimeMillis();
