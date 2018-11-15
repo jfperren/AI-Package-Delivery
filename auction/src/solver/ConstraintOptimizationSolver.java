@@ -1,8 +1,7 @@
-package main;
+package solver;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +12,6 @@ import java.util.Collections;
 import logist.plan.Plan;
 import logist.simulation.Vehicle;
 import logist.task.Task;
-import logist.task.TaskSet;
 import logist.topology.Topology.City;
 
 public class ConstraintOptimizationSolver {
@@ -29,7 +27,7 @@ public class ConstraintOptimizationSolver {
 	/**
 	 * Represent a constraint optimization solver for the pickup-and-delivery problem.
 	 */
-	public ConstraintOptimizationSolver(List<Vehicle> vehicles, TaskSet tasks, int seed) {
+	public ConstraintOptimizationSolver(List<Vehicle> vehicles, Set<Task> tasks, int seed) {
 
 		random = new Random(seed);
 
@@ -41,7 +39,6 @@ public class ConstraintOptimizationSolver {
 
 		while (iterator.hasNext()) {
 			Task task = iterator.next();
-
 			pickups.add(new PickupLabel(task));
 			deliveries.add(new DeliveryLabel(task));
 		}
@@ -116,6 +113,7 @@ public class ConstraintOptimizationSolver {
 	 * 		  local minimum.
 	 * @return The best assignment found in the given time.
 	 */
+	@SuppressWarnings("unused")
 	public List<Plan> solve(double timeout, double p, int neighborhoodSize, int nReset) {
 
 		// Create a random assignment and use it a global best for now.
@@ -167,14 +165,12 @@ public class ConstraintOptimizationSolver {
 			}
 
 			// Log as we go if required
-			 if (LOG_RESULTS && counter % 10 == 0) {
-			     System.out.println(counter + "|" + resetCounter + "|" + cost + "|" + globalBestCost + "|" + assignment.hashCode());
-			 }
+			if (LOG_RESULTS && counter % 10 == 0) {
+				System.out.println(counter + "|" + resetCounter + "|" + cost + "|" + globalBestCost + "|" + assignment.hashCode());
+			}
 
 			counter++;
 		}
-
-		System.out.println(globalBestAssignment);
 
 		return globalBestAssignment.getPlans();
 	}
@@ -304,10 +300,12 @@ public class ConstraintOptimizationSolver {
 			// For each packet, this map contains 0 if it is not picked up, 1 if it is and 2 if delivered.
 			HashMap<Integer, Integer> deliveryStatus = new HashMap<Integer, Integer>();
 
-			for (int i = 0; i < pickups.size(); i++) {
-				deliveryStatus.put(i, 0);
+			for (Label task: pickups) {
+				deliveryStatus.put(task.taskId(), 0);
 			}
 
+//			System.out.println("SUCCESSORS BEFORE: " + successors);
+			
 			for (Label vehicle: vehicles) {
 
 				// At the start, the vehicle has a load of 0.
@@ -324,6 +322,9 @@ public class ConstraintOptimizationSolver {
 					if (action.isPickup()) {
 
 						// Check that the task is available
+//						System.out.println("STATUS: " + deliveryStatus);
+//						System.out.println("SUCCESSORS: " + successors);
+//						System.out.println("TASK ID: " + action.taskId());
 						if (deliveryStatus.get(action.taskId()) != 0) {
 							return Double.POSITIVE_INFINITY;
 						}
