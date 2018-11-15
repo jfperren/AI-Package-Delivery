@@ -9,10 +9,21 @@
 		<set class-name="company.NaiveCompany"/>
 	</agent>
 	
-	<agent name="auction-self-centered">
+	<agent name="auction-margin-1000">
 		<set class-path="bin/"/>
 		<set class-name="company.ProfitMarginCompany"/>
 		<set margin="1000"/>
+	</agent>
+	
+		<agent name="auction-margin-500">
+		<set class-path="bin/"/>
+		<set class-name="company.ProfitMarginCompany"/>
+		<set margin="500"/>
+	</agent>
+	
+	<agent name="auction-opponent">
+		<set class-path="bin/"/>
+		<set class-name="company.OpponentCompany"/>
 	</agent>
 	
 </agents>
