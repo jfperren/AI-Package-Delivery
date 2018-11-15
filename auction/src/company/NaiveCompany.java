@@ -44,6 +44,9 @@ public class NaiveCompany extends AbstractCompany {
 	
 	@Override
 	public void auctionResult(Task previous, int winner, Long[] bids) {
+		
+		super.auctionResult(previous, winner, bids);
+		
 		if (winner == agent.id()) {
 			currentCity = previous.deliveryCity;
 		}

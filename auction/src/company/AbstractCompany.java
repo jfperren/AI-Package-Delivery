@@ -53,6 +53,17 @@ abstract class AbstractCompany implements AuctionBehavior {
     	
     	return reward;
     }
+    
+    @Override
+	public void auctionResult(Task previous, int winner, Long[] bids) {
+    
+    	if (agent.id() == 0) {
+    		System.out.println("---");
+        	System.out.println("Task #" + previous.id);
+        	System.out.println("Winner: " + winner + " for " + bids[winner] + " vs " + bids[1-winner]);
+        	
+    	}
+    }
 	
 	protected void logResults(List<Plan> plans, TaskSet tasks) {
 		

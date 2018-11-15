@@ -11,7 +11,8 @@
 	
 	<agent name="auction-self-centered">
 		<set class-path="bin/"/>
-		<set class-name="company.SelfCenteredCompany"/>
+		<set class-name="company.ProfitMarginCompany"/>
+		<set margin="1000"/>
 	</agent>
 	
 </agents>

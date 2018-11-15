@@ -5,9 +5,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import logist.LogistPlatform;
 import logist.LogistSettings;
 import logist.agent.Agent;
-import logist.config.Parsers;
 import logist.plan.Plan;
 import logist.simulation.Vehicle;
 import logist.task.Task;
@@ -17,7 +17,33 @@ import logist.topology.Topology;
 import solver.ConstraintOptimizationSolver;
 
 
-public class SelfCenteredCompany extends AbstractCompany {
+public class ProfitMarginCompany extends AbstractCompany {
+	
+	static class Margin {
+		
+		public int margin() {
+			return 0;
+		}
+		
+		public void update(Task previous, int winner, Long[] bids) {
+			// Nothing
+		}
+		
+		public static Margin fromString(String s) {
+			return Margin.fixed(Integer.parseInt(s));
+		}
+		
+		public static Margin fixed(final int margin) {
+			
+			return new Margin() {
+				
+				@Override
+				public int margin() {
+					return margin;
+				}
+			};
+		}
+	}
 
 	private List<Vehicle> vehicles;
 	private Set<Task> tasks;
@@ -40,6 +66,9 @@ public class SelfCenteredCompany extends AbstractCompany {
 	double p = 0.05;
 	int neighborhoodSize = 30;
 	int nReset = 500;
+	
+	// Profit parameters
+	Margin margin;
 
 
 	@Override
@@ -50,21 +79,24 @@ public class SelfCenteredCompany extends AbstractCompany {
 		tasks = new HashSet<Task>();
 		vehicles = agent.vehicles();
 		
+		for (int k = 0; k < agent.vehicles().size(); k++) {
+			currentPlans.add(Plan.EMPTY);
+		}
+		
 		// this code is used to get the timeouts
         LogistSettings ls = null;
         try {
-            ls = Parsers.parseSettings("config/settings_default.xml");
+            ls = LogistPlatform.getSettings();
         }
         catch (Exception exc) {
             System.out.println("There was a problem loading the configuration file.");
         }
 		
 		// the setup method cannot last more than timeout_setup milliseconds
-//		timeoutSetup = ls.get(LogistSettings.TimeoutKey.SETUP);
-//		timeoutPlan = ls.get(LogistSettings.TimeoutKey.PLAN);
+		timeoutSetup = ls.get(LogistSettings.TimeoutKey.SETUP);
+		timeoutPlan = ls.get(LogistSettings.TimeoutKey.PLAN);
 		
-        timeoutPlan = 10000;
-        
+		margin = Margin.fromString(agent.readProperty("margin", String.class, "0"));
 	}
 	
 	public Set<Task> tasksAfterAdding(Task task) {
@@ -81,7 +113,7 @@ public class SelfCenteredCompany extends AbstractCompany {
 		potentialPlans = solver.solve(timeoutRatio * timeoutPlan, p, neighborhoodSize, nReset);
 		potentialCost = costOfMoves(potentialPlans);
 		
-		System.out.println("-------");
+		System.out.println("-- Self-Centered #" + agent.id() + "--");
 		System.out.println("Cost before: " + currentCost);
 		System.out.println("Cost with: " + potentialCost);
 		System.out.println("Marginal Cost: " + (potentialCost - currentCost));
@@ -91,14 +123,16 @@ public class SelfCenteredCompany extends AbstractCompany {
 
 	@Override
 	public Long askPrice(Task task) {
-		return (long) Math.max(marginalCost(task), 0);
+		return (long) Math.max(marginalCost(task), 0) + margin.margin();
 	}
 
 	@Override
-	public void auctionResult(Task lastTask, int lastWinner, Long[] lastOffers) {
+	public void auctionResult(Task previous, int winner, Long[] bids) {
 		
-		if (lastWinner == agent.id()) {
-			tasks = tasksAfterAdding(lastTask);
+		super.auctionResult(previous, winner, bids);
+		
+		if (winner == agent.id()) {
+			tasks = tasksAfterAdding(previous);
 			currentPlans = potentialPlans;
 			currentCost = potentialCost;
 		}
