@@ -14,33 +14,35 @@ import logist.task.Task;
 import logist.task.TaskDistribution;
 import logist.task.TaskSet;
 import logist.topology.Topology;
+import logist.topology.Topology.City;
 import solver.ConstraintOptimizationSolver;
 
 
 public class SmartCompany extends AbstractCompany {
+		
+	protected double currentCost = 0;
+	protected List<Plan> currentPlans = new ArrayList<Plan>();
 	
-	private List<Vehicle> vehicles;
-	private Set<Task> tasks;
+	protected double potentialCost = 0;
+	protected List<Plan> potentialPlans = new ArrayList<Plan>();
 	
-	private double currentCost = 0;
-	private List<Plan> currentPlans = new ArrayList<Plan>();
+	protected ConstraintOptimizationSolver solver;
 	
-	private double potentialCost = 0;
-	private List<Plan> potentialPlans = new ArrayList<Plan>();
-	
-	private ConstraintOptimizationSolver solver;
 	
 	// Timeout values from settings
 	@SuppressWarnings("unused")
-	private double timeoutSetup;
-	private double timeoutPlan;
+	protected double timeoutSetup;
+	protected double timeoutPlan;
+	protected double timeoutBid;
 	
 	// Parameters of the solver
-	double timeoutRatio = 0.9;
-	double p = 0.05;
-	int neighborhoodSize = 30;
-	int nReset = 500;
-	
+	protected double timeoutRatio = 0.9;
+	protected double p = 0.05;
+	protected int neighborhoodSize = 30;
+	protected int nReset = 500;
+	protected int horizon = 8;
+	protected int marginalCost = 500;
+
 
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
@@ -66,7 +68,65 @@ public class SmartCompany extends AbstractCompany {
 		// the setup method cannot last more than timeout_setup milliseconds
 		timeoutSetup = ls.get(LogistSettings.TimeoutKey.SETUP);
 		timeoutPlan = ls.get(LogistSettings.TimeoutKey.PLAN);
+		timeoutBid = ls.get(LogistSettings.TimeoutKey.BID);
 		
+	}
+	
+	public int averageMarginalCost(int k, int n) {
+		
+		int marginalCost = 0;
+
+		for (int i = 0; i < n; i++) {
+		
+			Set<Task> tasks = generateTasks(k);
+			Task additionalTask = generateTask(k+1);
+			
+			ConstraintOptimizationSolver oldSolver = new ConstraintOptimizationSolver(vehicles, tasks, 0);
+			List<Plan> oldPlans = oldSolver.solve(timeoutRatio * timeoutPlan / (2 * n), p, neighborhoodSize, nReset);
+			double oldCost = costOfMoves(oldPlans);		
+			
+			tasks.add(additionalTask);
+			
+			ConstraintOptimizationSolver newSolver = new ConstraintOptimizationSolver(vehicles, tasks, 0);
+			List<Plan> newPlans = newSolver.solve(timeoutRatio * timeoutPlan / (2 * n), p, neighborhoodSize, nReset);
+			double newCost = costOfMoves(newPlans);		
+			
+			marginalCost += (newCost - oldCost) / n;
+			
+		}
+		
+		return marginalCost;
+	}
+	
+	public Task generateTask(int id) {
+		
+		double t = 0;
+		double p = Math.random();
+		
+		for (City start: topology) {
+			
+			for (City end: topology) {
+				
+				t += distribution.probability(start, end);
+				
+				if (p < t) {
+					return new Task(id, start, end, 0, distribution.weight(start, end));
+				}
+			}
+		}
+		
+		return null;
+	}
+	
+	public Set<Task> generateTasks(int k) {
+		
+		Set<Task> tasks = new HashSet<Task>();
+		
+		for (int i = 0; i < k; i++) {
+			tasks.add(generateTask(i));
+		}
+		
+		return tasks;
 	}
 	
 	public Set<Task> tasksAfterAdding(Task task) {
@@ -79,20 +139,15 @@ public class SmartCompany extends AbstractCompany {
 	public double marginalCost(Task task) {
 		
 		solver = new ConstraintOptimizationSolver(vehicles, tasksAfterAdding(task), 0);
-		
-		potentialPlans = solver.solve(timeoutRatio * timeoutPlan, p, neighborhoodSize, nReset);
+
+		potentialPlans = solver.solve(timeoutRatio * timeoutBid, p, neighborhoodSize, nReset);
 		potentialCost = costOfMoves(potentialPlans);
 		
-		System.out.println("-- Self-Centered #" + agent.id() + "--");
-		System.out.println("Cost before: " + currentCost);
-		System.out.println("Cost with: " + potentialCost);
-		System.out.println("Marginal Cost: " + (potentialCost - currentCost));
-		
-		return potentialCost - currentCost;
+		return Math.max(potentialCost - currentCost, 0);
 	}
 
 	@Override
-	public Long askPrice(Task task) {
+	public Long askPrice(Task task) {		
 		return (long) Math.max(marginalCost(task), 0);
 	}
 
@@ -101,8 +156,9 @@ public class SmartCompany extends AbstractCompany {
 		
 		super.auctionResult(previous, winner, bids);
 		
-		if (winner == agent.id()) {
+		if (winner == id) {
 			tasks = tasksAfterAdding(previous);
+			logMessage("New tasks are: " + tasks);
 			currentPlans = potentialPlans;
 			currentCost = potentialCost;
 		}
@@ -115,8 +171,5 @@ public class SmartCompany extends AbstractCompany {
     	
     	solver = new ConstraintOptimizationSolver(vehicles, tasks, 0);
 		return solver.solve(timeoutRatio * timeoutPlan, p, neighborhoodSize, nReset);
-//		potentialCost = costOfMoves(potentialPlans);
-    	
-//        return currentPlans;
     }
 }

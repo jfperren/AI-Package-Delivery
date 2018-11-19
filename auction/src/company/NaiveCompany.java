@@ -47,7 +47,7 @@ public class NaiveCompany extends AbstractCompany {
 		
 		super.auctionResult(previous, winner, bids);
 		
-		if (winner == agent.id()) {
+		if (winner == id) {
 			currentCity = previous.deliveryCity;
 		}
 	}

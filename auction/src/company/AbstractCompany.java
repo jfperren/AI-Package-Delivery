@@ -1,11 +1,15 @@
 package company;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 import logist.agent.Agent;
 import logist.behavior.AuctionBehavior;
 import logist.plan.Plan;
+import logist.simulation.Vehicle;
 import logist.task.Task;
 import logist.task.TaskDistribution;
 import logist.task.TaskSet;
@@ -14,30 +18,38 @@ import logist.topology.Topology;
 
 abstract class AbstractCompany implements AuctionBehavior {
 	
+	// Knowledge of the problem
 	protected Topology topology;
 	protected TaskDistribution distribution;
-	protected Agent agent;
-	protected Random random;
+
+	// Knowledge of our means
+	protected List<Vehicle> vehicles = new ArrayList<Vehicle>();
+	protected Set<Task> tasks = new HashSet<Task>();
+	protected int id;
 	
+	// Other stuff
+	protected Random random;
+	protected boolean log = false;	
 	
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
 
 		this.topology = topology;
 		this.distribution = distribution;
-		this.agent = agent;
+		
+		this.vehicles.addAll(agent.vehicles());
+		this.id = agent.id();
 		
 		long seed = -9019554669489983951L * agent.id();
 		this.random = new Random(seed);
-		
 	}
 	
     protected double costOfMoves(List<Plan> plans) {
     	
     	double reward = 0;
         
-        for (int k = 0; k < agent.vehicles().size(); k++) {
-        	reward += plans.get(k).totalDistance() * agent.vehicles().get(k).costPerKm();
+        for (int k = 0; k < vehicles.size(); k++) {
+        	reward += plans.get(k).totalDistance() * vehicles.get(k).costPerKm();
         }
         
         return reward;
@@ -57,22 +69,28 @@ abstract class AbstractCompany implements AuctionBehavior {
     @Override
 	public void auctionResult(Task previous, int winner, Long[] bids) {
     
-    	if (agent.id() == 0) {
+    	if (id == winner && log) {
     		System.out.println("---");
         	System.out.println("Task #" + previous.id);
-        	System.out.println("Winner: " + winner + " for " + bids[winner] + " vs " + bids[1-winner]);
-        	
+        	System.out.println("Winner: " + winner + " for " + bids[0] + " vs " + bids[1]);	
     	}
     }
 	
 	protected void logResults(List<Plan> plans, TaskSet tasks) {
 		
-		System.out.println("-- Agent " + agent.id() + " --");
-		System.out.println("Tasks: " + tasks);
-		System.out.println("Cost: " + costOfMoves(plans));
-		System.out.println("Payments: " + rewardOfTasks(tasks));
-		System.out.println("Total Reward: " + (rewardOfTasks(tasks) - costOfMoves(plans)));
+		logMessage("Tasks: " + tasks);
+		logMessage("Cost: " + costOfMoves(plans));
+		logMessage("Payments: " + rewardOfTasks(tasks));
+		logMessage("Tasks: " + tasks);
+		logMessage("Total Reward: " + (rewardOfTasks(tasks) - costOfMoves(plans)));
+
 	}
+	
+	protected void logMessage(String message) {
+		if (log) {
+			System.out.println("Agent #" + id + " - " + message);
+		}
+ 	}
 }
 
 
