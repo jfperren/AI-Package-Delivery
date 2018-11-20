@@ -28,7 +28,6 @@ public class SmartCompany extends AbstractCompany {
 	
 	protected ConstraintOptimizationSolver solver;
 	
-	
 	// Timeout values from settings
 	@SuppressWarnings("unused")
 	protected double timeoutSetup;
@@ -40,9 +39,11 @@ public class SmartCompany extends AbstractCompany {
 	protected double p = 0.05;
 	protected int neighborhoodSize = 30;
 	protected int nReset = 500;
-	protected int horizon = 8;
 	protected int marginalCost = 500;
-
+	
+	// Discounts
+	protected double initialDiscount = 0.5;
+	protected double horizon = 10;
 
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
@@ -51,6 +52,9 @@ public class SmartCompany extends AbstractCompany {
 		
 		tasks = new HashSet<Task>();
 		vehicles = agent.vehicles();
+		
+		initialDiscount = agent.readProperty("initialDiscount", Double.class, 1.0);
+		horizon = agent.readProperty("horizon", Integer.class, 0);
 		
 		for (int k = 0; k < agent.vehicles().size(); k++) {
 			currentPlans.add(Plan.EMPTY);
@@ -118,6 +122,14 @@ public class SmartCompany extends AbstractCompany {
 		return null;
 	}
 	
+	public double discount(Task task) {
+		if (horizon == 0) { return 1.0; }
+		
+		double discount = Math.min(1, initialDiscount + task.id * (1 - initialDiscount) / horizon);
+		logMessage("Discount: " + discount);
+		return discount;
+	}
+	
 	public Set<Task> generateTasks(int k) {
 		
 		Set<Task> tasks = new HashSet<Task>();
@@ -147,8 +159,10 @@ public class SmartCompany extends AbstractCompany {
 	}
 
 	@Override
-	public Long askPrice(Task task) {		
-		return (long) Math.max(marginalCost(task), 0);
+	public Long askPrice(Task task) {
+		double marginalCost = Math.max(0, marginalCost(task));
+		logMessage("Marginal Cost: " + marginalCost);
+		return (long) marginalCost;
 	}
 
 	@Override

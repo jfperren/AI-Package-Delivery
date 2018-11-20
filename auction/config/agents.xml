@@ -9,16 +9,13 @@
 		<set class-name="company.NaiveCompany"/>
 	</agent>
 	
-	<agent name="auction-margin-1000">
+	<agent name="auction-margin">
 		<set class-path="bin/"/>
 		<set class-name="company.ProfitMarginCompany"/>
-		<set margin="1000"/>
-	</agent>
-	
-		<agent name="auction-margin-500">
-		<set class-path="bin/"/>
-		<set class-name="company.ProfitMarginCompany"/>
-		<set margin="500"/>
+		<set margin="1.0"/>
+		<set learningRate="0.35"/>
+		<set horizon="10"/>
+		<set initialDiscount="0.5"/>
 	</agent>
 	
 	<agent name="auction-opponent">
@@ -26,4 +23,15 @@
 		<set class-name="company.OpponentCompany"/>
 	</agent>
 	
+	<agent name="auction-smart">
+		<set class-path="bin/"/>
+		<set class-name="company.SmartCompany"/>
+	</agent>
+	
+	<agent name="auction-adversarial">
+		<set class-path="bin/"/>
+		<set class-name="company.AdversarialCompany"/>
+		<set horizon="10"/>
+		<set initialDiscount="0.5"/>
+	</agent>
 </agents>

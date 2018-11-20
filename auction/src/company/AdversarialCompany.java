@@ -84,8 +84,7 @@ public class AdversarialCompany extends SmartCompany {
 		theirCosts.add(theirMarginalCost);
 		myCosts.add(myMarginalCost);
 		
-		double coeff = Math.min(1,  0.5 + 0.05 * task.id);
-		Long bid = (long)((myMarginalCost + theirMarginalCost) * coeff / 2);
+		Long bid = (long)((myMarginalCost + theirMarginalCost) * discount(task) / 2);
 		
 		if (bid <= 0) {
 			
@@ -98,8 +97,8 @@ public class AdversarialCompany extends SmartCompany {
 			bid = theirLowestBid - 2;
 		}
 		
-		if (bid < 0.8 * coeff * myMarginalCost) {
-			bid = (long) (0.8 * coeff * myMarginalCost);
+		if (bid < 0.8 * discount(task) * myMarginalCost) {
+			bid = (long) (0.8 * discount(task) * myMarginalCost);
 		}
 			
 		return bid;
