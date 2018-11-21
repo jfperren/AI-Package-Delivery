@@ -7,13 +7,13 @@
 	<settings import="config/settings_auction.xml" />
 	
 	<!-- load the topology from an external file -->
-	<topology import="config/topology/england.xml" />
+	<topology import="config/topology/switzerland.xml" />
 	
 	<!-- load agents from an external file -->
 	<agents import="config/agents.xml" />
 	
 	<!-- define task distribution -->
-	<tasks number="20" rngSeed="123456">
+	<tasks number="25" rngSeed="123456">
 		<!--
 			the probabilities, rewards and weight of tasks
 		-->
@@ -30,18 +30,18 @@
 			<!-- the first vehicle (blue) -->
 			<vehicle name="Vehicle 1">
 				<set color="#0000ff" />
-				<set home="Newcastle" />
+				<set home="Luzern" />
 				<set speed="90" />
-				<set capacity="40" />
+				<set capacity="50" />
 				<set cost-per-km="5" />
 			</vehicle>
 			
 			<!-- the second vehicle (red) -->
 			<vehicle name="Vehicle 2">
 				<set color="#ff0000" />
-				<set home="London" />
+				<set home="Fribourg" />
 				<set speed="90" />
-				<set capacity="40" />
+				<set capacity="50" />
 				<set cost-per-km="5" />
 			</vehicle>
 		</company>
@@ -50,21 +50,21 @@
 			<!-- the third vehicle (green) -->
 			<vehicle name="Vehicle 3">
 				<set color="#00ff00" />
-				<set home="Plymouth" />
+				<set home="Sion" />
 				<set speed="90" />
-				<set capacity="20" />
+				<set capacity="50" />
 				<set cost-per-km="5" />
 			</vehicle>
 			
 			<!-- the fourth vehicle (yellow) -->
 			<vehicle name="Vehicle 4">
 				<set color="#ffff00" />
-				<set home="Norwich" />
+				<set home="Aarau" />
 				<set speed="90" />
-				<set capacity="60" />
+				<set capacity="50" />
 				<set cost-per-km="5" />
 			</vehicle>
-		</company> d
+		</company>
 		
 	</companies>
 	

@@ -9,6 +9,7 @@ import java.util.Set;
 import logist.LogistPlatform;
 import logist.LogistSettings;
 import logist.agent.Agent;
+import logist.config.Parsers;
 import logist.plan.Plan;
 import logist.simulation.Vehicle;
 import logist.task.Task;
