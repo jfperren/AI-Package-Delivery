@@ -1,5 +1,6 @@
 package company;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -86,7 +87,7 @@ public class ProfitMarginCompany extends AbstractCompany {
 		// this code is used to get the timeouts
         LogistSettings ls = null;
         try {
-            ls = LogistPlatform.getSettings();
+            ls = Parsers.parseSettings("config"+ File.separator + "settings_default.xml");
         }
         catch (Exception exc) {
             System.out.println("There was a problem loading the configuration file.");
