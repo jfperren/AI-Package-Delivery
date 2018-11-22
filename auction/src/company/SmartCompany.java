@@ -1,13 +1,14 @@
 package company;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import logist.LogistPlatform;
 import logist.LogistSettings;
 import logist.agent.Agent;
+import logist.config.Parsers;
 import logist.plan.Plan;
 import logist.simulation.Vehicle;
 import logist.task.Task;
@@ -63,7 +64,7 @@ public class SmartCompany extends AbstractCompany {
 		// this code is used to get the timeouts
         LogistSettings ls = null;
         try {
-            ls = LogistPlatform.getSettings();
+            ls = Parsers.parseSettings("config"+ File.separator + "settings_default.xml");
         }
         catch (Exception exc) {
             System.out.println("There was a problem loading the configuration file.");

@@ -1,5 +1,6 @@
 package company;
 
+
 import logist.agent.Agent;
 import logist.task.Task;
 import logist.task.TaskDistribution;
