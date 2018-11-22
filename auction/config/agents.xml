@@ -34,4 +34,27 @@
 		<set horizon="10"/>
 		<set initialDiscount="0.5"/>
 	</agent>
+	
+	<agent name="auction-adversarial-pos">
+		<set class-path="bin/"/>
+		<set class-name="company.AdversarialCompany"/>
+		<set horizon="10"/>
+		<set initialDiscount="0.5"/>
+		<set bias-add="50"/>
+		<set biad-mult="1.05"/>
+	</agent>
+	
+	<agent name="auction-adversarial-neg">
+		<set class-path="bin/"/>
+		<set class-name="company.AdversarialCompany"/>
+		<set horizon="10"/>
+		<set initialDiscount="0.5"/>
+		<set bias-add="-50"/>
+		<set biad-mult="0.95"/>
+	</agent>
+	
+	<agent name="auction-afk">
+		<set class-path="bin/"/>
+		<set class-name="company.AFKCompany"/>
+	</agent>
 </agents>

@@ -16,7 +16,7 @@ public class AdversarialCompany extends SmartCompany {
 	public class Adversary extends SmartCompany {
 		
 		public void setup(Topology topology, TaskDistribution distribution, 
-				int id, List<Vehicle> vehicles, double timeoutBid) {
+				List<Vehicle> vehicles, int id, double timeoutBid) {
 			
 			this.id = id;
 			this.topology = topology;
@@ -60,16 +60,22 @@ public class AdversarialCompany extends SmartCompany {
 	List<Double> myCosts = new ArrayList<Double>();
 	List<Double> theirCosts = new ArrayList<Double>();
 	
+	private double biasAdd = 0.0;
+	private double biasMult = 1.0;
+	
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
 
 		super.setup(topology, distribution, agent);
 		
+		biasAdd = agent.readProperty("bias-add", Double.class, 0.0);
+		biasMult = agent.readProperty("biad-mult", Double.class, 1.0);
+		
 		log = true;		
 		timeoutBid = timeoutBid / 2;
 				
 		adversary = new Adversary();
-		adversary.setup(topology, distribution, 1 - agent.id(), vehicles, timeoutBid);
+		adversary.setup(topology, distribution, vehicles, 1 - agent.id(), timeoutBid);
 	}
 	
 	@Override
@@ -89,6 +95,8 @@ public class AdversarialCompany extends SmartCompany {
 		myCosts.add(myMarginalCost);
 		
 		Long bid = (long)((myMarginalCost + theirMarginalCost) * discount(task) / 2);
+		
+		bid = (long) (bid * biasMult +  biasAdd);
 		
 		if (bid <= 0) {
 			
