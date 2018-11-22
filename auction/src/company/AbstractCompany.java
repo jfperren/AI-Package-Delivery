@@ -89,6 +89,17 @@ abstract class AbstractCompany implements AuctionBehavior {
     	return reward;
     }
     
+	public boolean canCarry(Task task) {
+		
+		for (Vehicle vehicle: vehicles) {
+			if (vehicle.capacity() >= task.weight) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+    
     @Override
 	public void auctionResult(Task previous, int winner, Long[] bids) {
     

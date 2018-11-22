@@ -26,6 +26,11 @@ public class ProfitMarginCompany extends SmartCompany {
 	
 	@Override
 	public Long askPrice(Task task) {
+		
+		if (!canCarry(task)) {
+			return null;
+		}
+		
 		logMessage("Current Margin: " + margin);
 		double bid = discount(task) * super.askPrice(task) * margin;
 		

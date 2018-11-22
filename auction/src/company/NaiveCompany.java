@@ -52,11 +52,6 @@ public class NaiveCompany extends AbstractCompany {
 		}
 	}
 	
-	public boolean canCarry(Task task) {
-		// TODO: Update with real code
-		return vehicle.capacity() > task.weight;
-	}
-	
 	@Override
 	public Long askPrice(Task task) {
 		

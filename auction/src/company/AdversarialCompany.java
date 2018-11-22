@@ -75,6 +75,10 @@ public class AdversarialCompany extends SmartCompany {
 	@Override
 	public Long askPrice(Task task) {
 		
+		if (!canCarry(task)) {
+			return null;
+		}
+		
 		double myMarginalCost = marginalCost(task);
 		double theirMarginalCost = adversary.marginalCost(task);
 		

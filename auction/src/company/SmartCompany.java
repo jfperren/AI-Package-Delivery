@@ -76,32 +76,6 @@ public class SmartCompany extends AbstractCompany {
 		
 	}
 	
-	public int averageMarginalCost(int k, int n) {
-		
-		int marginalCost = 0;
-
-		for (int i = 0; i < n; i++) {
-		
-			Set<Task> tasks = generateTasks(k);
-			Task additionalTask = generateTask(k+1);
-			
-			ConstraintOptimizationSolver oldSolver = new ConstraintOptimizationSolver(vehicles, tasks, 0);
-			List<Plan> oldPlans = oldSolver.solve(timeoutRatio * timeoutPlan / (2 * n), p, neighborhoodSize, nReset);
-			double oldCost = costOfMoves(oldPlans);		
-			
-			tasks.add(additionalTask);
-			
-			ConstraintOptimizationSolver newSolver = new ConstraintOptimizationSolver(vehicles, tasks, 0);
-			List<Plan> newPlans = newSolver.solve(timeoutRatio * timeoutPlan / (2 * n), p, neighborhoodSize, nReset);
-			double newCost = costOfMoves(newPlans);		
-			
-			marginalCost += (newCost - oldCost) / n;
-			
-		}
-		
-		return marginalCost;
-	}
-	
 	public Task generateTask(int id) {
 		
 		double t = 0;
