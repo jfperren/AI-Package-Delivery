@@ -27,6 +27,7 @@ public class SmartCompany extends AbstractCompany {
 	protected double potentialCost = 0;
 	protected List<Plan> potentialPlans = new ArrayList<Plan>();
 	
+	protected ConstraintOptimizationSolver potentialSolver;
 	protected ConstraintOptimizationSolver solver;
 	
 	// Timeout values from settings
@@ -125,9 +126,14 @@ public class SmartCompany extends AbstractCompany {
 	
 	public double marginalCost(Task task) {
 		
-		solver = new ConstraintOptimizationSolver(vehicles, tasksAfterAdding(task), 0);
-
-		potentialPlans = solver.solve(timeoutRatio * timeoutBid, p, neighborhoodSize, nReset);
+		if (solver == null) {
+			potentialSolver = new ConstraintOptimizationSolver(vehicles, tasksAfterAdding(task), 0);
+		} else {
+//			potentialSolver = new ConstraintOptimizationSolver(vehicles, tasksAfterAdding(task), 0);
+			potentialSolver = new ConstraintOptimizationSolver(solver, task);
+		}
+		
+		potentialPlans = potentialSolver.solve(timeoutRatio * timeoutBid, p, neighborhoodSize, nReset);
 		potentialCost = costOfMoves(potentialPlans);
 		
 		return Math.max(potentialCost - currentCost, 0);

@@ -23,6 +23,9 @@ public class ConstraintOptimizationSolver {
 	private List<DeliveryLabel> deliveries = new ArrayList<DeliveryLabel>();
 
 	private Random random;
+	
+	private Assignment initial;
+	private Assignment solution;
 
 	/**
 	 * Represent a constraint optimization solver for the pickup-and-delivery problem.
@@ -42,6 +45,30 @@ public class ConstraintOptimizationSolver {
 			pickups.add(new PickupLabel(task));
 			deliveries.add(new DeliveryLabel(task));
 		}
+		
+		initial = initialAssignment(random.nextInt());
+	}
+	
+	/**
+	 * Represent a constraint optimization solver for the pickup-and-delivery problem.
+	 */
+	public ConstraintOptimizationSolver(ConstraintOptimizationSolver s, Task newTask) {
+
+		random = s.random;
+		vehicles = s.vehicles;
+		pickups = new ArrayList<PickupLabel>();
+		deliveries = new ArrayList<DeliveryLabel>();
+		
+		pickups.addAll(s.pickups);
+		deliveries.addAll(s.deliveries);
+		
+		PickupLabel newPickup = new PickupLabel(newTask);
+		DeliveryLabel newDelivery = new DeliveryLabel(newTask);
+		
+		pickups.add(newPickup);
+		deliveries.add(newDelivery);
+		
+		initial = new Assignment(s.solution, newPickup, newDelivery);
 	}
 
 	/**
@@ -117,7 +144,7 @@ public class ConstraintOptimizationSolver {
 	public List<Plan> solve(double timeout, double p, int neighborhoodSize, int nReset) {
 
 		// Create a random assignment and use it a global best for now.
-		Assignment assignment = initialAssignment(random.nextInt());
+		Assignment assignment = initial;
 		Assignment globalBestAssignment = assignment;
 
 		// We calculate the cost and store it as current and global best.
@@ -171,6 +198,8 @@ public class ConstraintOptimizationSolver {
 
 			counter++;
 		}
+		
+		solution = globalBestAssignment;
 
 		return globalBestAssignment.getPlans();
 	}
@@ -204,6 +233,20 @@ public class ConstraintOptimizationSolver {
 			}
 
 			return result;
+		}
+		
+		public Assignment(Assignment other, PickupLabel newPickup, DeliveryLabel newDelivery) {
+			successors = new HashMap<Label, Label>();
+			successors.putAll(other.successors);
+			
+			List<Label> labels = new ArrayList<Label>(successors.keySet());
+			Label randomElement = labels.get(random.nextInt(labels.size()));
+			
+			// Randomly insert new task in the current assignment
+			Label successor = successors.get(randomElement);
+			successors.put(randomElement, newPickup);
+			successors.put(newPickup, newDelivery);
+			successors.put(newDelivery, successor);
 		}
 
 		@Override
@@ -303,8 +346,6 @@ public class ConstraintOptimizationSolver {
 			for (Label task: pickups) {
 				deliveryStatus.put(task.taskId(), 0);
 			}
-
-//			System.out.println("SUCCESSORS BEFORE: " + successors);
 			
 			for (Label vehicle: vehicles) {
 
@@ -322,9 +363,6 @@ public class ConstraintOptimizationSolver {
 					if (action.isPickup()) {
 
 						// Check that the task is available
-//						System.out.println("STATUS: " + deliveryStatus);
-//						System.out.println("SUCCESSORS: " + successors);
-//						System.out.println("TASK ID: " + action.taskId());
 						if (deliveryStatus.get(action.taskId()) != 0) {
 							return Double.POSITIVE_INFINITY;
 						}
