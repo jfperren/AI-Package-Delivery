@@ -18,7 +18,7 @@
 			the probabilities, rewards and weight of tasks
 		-->
 		<probability distribution="uniform" min="0.0" max="1.0" />
-		<reward distribution="constant" policy="short-distances" min="100" max="99999" />
+		<reward distribution="constant" policy="long-distances" min="100" max="99999" />
 		<weight distribution="uniform" min="5" max="10" />
 
 	</tasks>
@@ -64,7 +64,7 @@
 				<set capacity="60" />
 				<set cost-per-km="5" />
 			</vehicle>
-		</company> d
+		</company>
 		
 	</companies>
 	
