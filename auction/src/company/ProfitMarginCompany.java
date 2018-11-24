@@ -52,15 +52,5 @@ public class ProfitMarginCompany extends SmartCompany {
 		} else {
 			margin = margin + 0.05;
 		}
-		
-//		margin = (1 - learningRate) * margin + learningRate * (bids[1 - id] / (double) bids[id]);
-		
-//		if (winner == id) {
-//			logMessage("Increasing margin by: " + (1 + learningRate));
-//			margin = margin * (1 + learningRate);
-//		} else {
-//			logMessage("Decreasing margin by: " + (1 - learningRate));
-//			margin = margin * (1 - learningRate);
-//		}
 	}
 }

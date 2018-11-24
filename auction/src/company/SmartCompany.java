@@ -43,14 +43,14 @@ public class SmartCompany extends AbstractCompany {
 	protected int marginalCost = 500;
 	
 	// Discounts
-	protected double initialDiscount = 0.5;
-	protected double horizon = 10;
+	protected double initialDiscount = 1.0;
+	protected double horizon = 0;
 
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
 
 		super.setup(topology, distribution, agent);
-		
+			
 		tasks = new HashSet<Task>();
 		vehicles = agent.vehicles();
 		
