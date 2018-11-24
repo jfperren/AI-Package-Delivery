@@ -9,6 +9,7 @@ import logist.simulation.VehicleImpl;
 import logist.task.Task;
 import logist.task.TaskDistribution;
 import logist.topology.Topology;
+import solver.CostEstimator;
 
 public class AdversarialCompany extends SmartCompany {
 
@@ -62,6 +63,9 @@ public class AdversarialCompany extends SmartCompany {
 	
 	private double biasAdd = 0.0;
 	private double biasMult = 1.0;
+	private double alpha = 0.0;
+	
+	private CostEstimator costEstimator;
 	
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
@@ -70,12 +74,15 @@ public class AdversarialCompany extends SmartCompany {
 		
 		biasAdd = agent.readProperty("bias-add", Double.class, 0.0);
 		biasMult = agent.readProperty("biad-mult", Double.class, 1.0);
+		alpha = agent.readProperty("alpha", Double.class, 0.0);
 		
 		log = true;		
 		timeoutBid = timeoutBid / 2;
 				
 		adversary = new Adversary();
 		adversary.setup(topology, distribution, vehicles, 1 - agent.id(), timeoutBid);
+		costEstimator = new CostEstimator(distribution, topology);
+		costEstimator.setup();
 	}
 	
 	@Override
@@ -87,16 +94,18 @@ public class AdversarialCompany extends SmartCompany {
 		
 		double myMarginalCost = marginalCost(task);
 		double theirMarginalCost = adversary.marginalCost(task);
+		double jointCost = costEstimator.coeff(task);
 		
 		logMessage("My Marginal cost (marginal): " + myMarginalCost);
 		logMessage("Their Marginal cost: " + theirMarginalCost);
+		logMessage("Joint cost: " + jointCost);
 		
 		theirCosts.add(theirMarginalCost);
 		myCosts.add(myMarginalCost);
 		
 		Long bid = (long)((myMarginalCost + theirMarginalCost) * discount(task) / 2);
 		
-		bid = (long) (bid * biasMult +  biasAdd);
+		bid = (long) ((bid * biasMult +  biasAdd) * Math.pow(jointCost, alpha));
 		
 		if (bid <= 0) {
 			
@@ -109,9 +118,9 @@ public class AdversarialCompany extends SmartCompany {
 			bid = theirLowestBid - 2;
 		}
 		
-		if (bid < 0.8 * discount(task) * myMarginalCost) {
-			bid = (long) (0.8 * discount(task) * myMarginalCost);
-		}
+//		if (bid < 0.8 * discount(task) * myMarginalCost) {
+//			bid = (long) (0.8 * discount(task) * myMarginalCost);
+//		}
 			
 		return bid;
 	}
