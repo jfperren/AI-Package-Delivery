@@ -4,12 +4,12 @@
 	<!-- A list of agents and their behavior classes -->
 	
 	<!-- #### AUCTION AGENTS ### -->
-	<agent name="auction-naive">
+	<agent name="Naive">
 		<set class-path="bin/"/>
 		<set class-name="company.NaiveCompany"/>
 	</agent>
 	
-	<agent name="auction-margin">
+	<agent name="Margin">
 		<set class-path="bin/"/>
 		<set class-name="company.ProfitMarginCompany"/>
 		<set margin="1.0"/>
@@ -18,33 +18,54 @@
 		<set initialDiscount="0.5"/>
 	</agent>
 	
-	<agent name="auction-opponent">
+	<agent name="Opponent">
 		<set class-path="bin/"/>
 		<set class-name="company.OpponentCompany"/>
 	</agent>
 	
-	<agent name="auction-smart">
+	<agent name="Zero-Profit">
 		<set class-path="bin/"/>
 		<set class-name="company.SmartCompany"/>
 	</agent>
 	
-	<agent name="auction-adversarial">
+	<agent name="Adversarial-Neutral">
 		<set class-path="bin/"/>
 		<set class-name="company.AdversarialCompany"/>
-		<set horizon="10"/>
+		<set horizon="15"/>
 		<set initialDiscount="0.5"/>
+		<set bias-add="0"/>
+		<set biad-mult="1.0"/>
 	</agent>
 	
-	<agent name="auction-adversarial-pos">
+	<agent name="Adversarial-Pos">
 		<set class-path="bin/"/>
 		<set class-name="company.AdversarialCompany"/>
-		<set horizon="10"/>
+		<set horizon="15"/>
 		<set initialDiscount="0.5"/>
 		<set bias-add="50"/>
 		<set biad-mult="1.05"/>
 	</agent>
 	
-	<agent name="auction-adversarial-neg">
+	<agent name="Adversarial-Pos-Optimistic">
+		<set class-path="bin/"/>
+		<set class-name="company.AdversarialCompany"/>
+		<set horizon="30"/>
+		<set initialDiscount="0.3"/>
+		<set bias-add="50"/>
+		<set biad-mult="1.05"/>
+	</agent>
+	
+	<agent name="Adversarial-Pos-Future">
+		<set class-path="bin/"/>
+		<set class-name="company.AdversarialCompany"/>
+		<set horizon="15"/>
+		<set initialDiscount="0.5"/>
+		<set bias-add="50"/>
+		<set biad-mult="1.05"/>
+		<set alpha="1.0"/>
+	</agent>
+	
+	<agent name="Adversarial-Neg">
 		<set class-path="bin/"/>
 		<set class-name="company.AdversarialCompany"/>
 		<set horizon="10"/>
@@ -53,7 +74,7 @@
 		<set biad-mult="0.95"/>
 	</agent>
 	
-	<agent name="auction-afk">
+	<agent name="AFK">
 		<set class-path="bin/"/>
 		<set class-name="company.AFKCompany"/>
 	</agent>
