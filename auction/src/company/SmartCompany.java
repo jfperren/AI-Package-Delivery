@@ -156,15 +156,29 @@ public class SmartCompany extends AbstractCompany {
 			logMessage("New tasks are: " + tasks);
 			currentPlans = potentialPlans;
 			currentCost = potentialCost;
+			solver = potentialSolver;
 		}
 	}
 
     @Override
     public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {  
     	
-    	logResults(currentPlans, tasks);
-    	
-    	solver = new ConstraintOptimizationSolver(vehicles, tasks, 0);
-		return solver.solve(timeoutRatio * timeoutPlan, p, neighborhoodSize, nReset);
+    	if (tasks.isEmpty()) {
+    		
+    		List<Plan> plans = new ArrayList<Plan>();
+    		
+    		for (int i = 0; i < vehicles.size(); i++) {
+    			plans.add(Plan.EMPTY);
+    		}
+    		
+    		return plans;
+    		
+    	} else {
+    		
+    		logResults(currentPlans, tasks);
+        	
+        	solver = new ConstraintOptimizationSolver(vehicles, tasks, 0);
+    		return solver.solve(timeoutRatio * timeoutPlan, p, neighborhoodSize, nReset);
+    	}
     }
 }
