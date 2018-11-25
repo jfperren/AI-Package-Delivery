@@ -1,81 +1,15 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
 <agents>
-	<!-- A list of agents and their behavior classes -->
-	
-	<!-- #### AUCTION AGENTS ### -->
-	<agent name="Naive">
-		<set class-path="bin/"/>
-		<set class-name="company.NaiveCompany"/>
-	</agent>
-	
-	<agent name="Margin">
-		<set class-path="bin/"/>
-		<set class-name="company.ProfitMarginCompany"/>
-		<set margin="1.0"/>
-		<set learningRate="0.35"/>
-		<set horizon="10"/>
-		<set initialDiscount="0.5"/>
-	</agent>
-	
-	<agent name="Opponent">
-		<set class-path="bin/"/>
-		<set class-name="company.OpponentCompany"/>
-	</agent>
-	
-	<agent name="Zero-Profit">
-		<set class-path="bin/"/>
-		<set class-name="company.SmartCompany"/>
-	</agent>
-	
-	<agent name="Adversarial-Neutral">
-		<set class-path="bin/"/>
-		<set class-name="company.AdversarialCompany"/>
-		<set horizon="15"/>
-		<set initialDiscount="0.5"/>
-		<set bias-add="0"/>
-		<set biad-mult="1.0"/>
-	</agent>
-	
-	<agent name="Adversarial-Pos">
+
+	<agent name="auction-main-70">
 		<set class-path="bin/"/>
 		<set class-name="company.AdversarialCompany"/>
 		<set horizon="15"/>
 		<set initialDiscount="0.5"/>
 		<set bias-add="50"/>
 		<set biad-mult="1.05"/>
+		<set alpha="0.5"/>
 	</agent>
-	
-	<agent name="Adversarial-Pos-Optimistic">
-		<set class-path="bin/"/>
-		<set class-name="company.AdversarialCompany"/>
-		<set horizon="30"/>
-		<set initialDiscount="0.3"/>
-		<set bias-add="50"/>
-		<set biad-mult="1.05"/>
-	</agent>
-	
-	<agent name="Adversarial-Pos-Future">
-		<set class-path="bin/"/>
-		<set class-name="company.AdversarialCompany"/>
-		<set horizon="15"/>
-		<set initialDiscount="0.5"/>
-		<set bias-add="50"/>
-		<set biad-mult="1.05"/>
-		<set alpha="1.0"/>
-	</agent>
-	
-	<agent name="Adversarial-Neg">
-		<set class-path="bin/"/>
-		<set class-name="company.AdversarialCompany"/>
-		<set horizon="10"/>
-		<set initialDiscount="0.5"/>
-		<set bias-add="-50"/>
-		<set biad-mult="0.95"/>
-	</agent>
-	
-	<agent name="AFK">
-		<set class-path="bin/"/>
-		<set class-name="company.AFKCompany"/>
-	</agent>
+
 </agents>
