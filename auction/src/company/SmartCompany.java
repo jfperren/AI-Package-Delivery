@@ -44,8 +44,8 @@ public class SmartCompany extends AbstractCompany {
 	protected int marginalCost = 500;
 	
 	// Discounts
-	protected double initialDiscount = 1.0;
-	protected double horizon = 0;
+	protected double initialDiscount = 0.5;
+	protected double horizon = 15.0;
 
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
@@ -55,8 +55,8 @@ public class SmartCompany extends AbstractCompany {
 		tasks = new HashSet<Task>();
 		vehicles = agent.vehicles();
 		
-		initialDiscount = agent.readProperty("initialDiscount", Double.class, 1.0);
-		horizon = agent.readProperty("horizon", Integer.class, 0);
+		initialDiscount = agent.readProperty("initialDiscount", Double.class, 0.5);
+		horizon = agent.readProperty("horizon", Integer.class, 15);
 		
 		for (int k = 0; k < agent.vehicles().size(); k++) {
 			currentPlans.add(Plan.EMPTY);
@@ -129,7 +129,6 @@ public class SmartCompany extends AbstractCompany {
 		if (solver == null) {
 			potentialSolver = new ConstraintOptimizationSolver(vehicles, tasksAfterAdding(task), 0);
 		} else {
-//			potentialSolver = new ConstraintOptimizationSolver(vehicles, tasksAfterAdding(task), 0);
 			potentialSolver = new ConstraintOptimizationSolver(solver, task);
 		}
 		
@@ -139,7 +138,6 @@ public class SmartCompany extends AbstractCompany {
 		return Math.max(potentialCost - currentCost, 0);
 	}
 
-	@Override
 	public Long askPrice(Task task) {
 		double marginalCost = Math.max(0, marginalCost(task));
 		logMessage("Marginal Cost: " + marginalCost);
@@ -160,7 +158,6 @@ public class SmartCompany extends AbstractCompany {
 		}
 	}
 
-    @Override
     public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {  
     	
     	if (tasks.isEmpty()) {

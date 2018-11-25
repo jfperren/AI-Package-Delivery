@@ -3,12 +3,13 @@ package company;
 import java.util.ArrayList;
 import java.util.List;
 
+import logist.behavior.AuctionBehavior;
 import logist.plan.Plan;
 import logist.simulation.Vehicle;
 import logist.task.Task;
 import logist.task.TaskSet;
 
-public class AFKCompany extends AbstractCompany {
+public class AFKCompany extends AbstractCompany implements AuctionBehavior {
 
 	@Override
 	public Long askPrice(Task task) {

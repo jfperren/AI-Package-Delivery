@@ -5,6 +5,7 @@ import java.util.List;
 
 import logist.Measures;
 import logist.agent.Agent;
+import logist.behavior.AuctionBehavior;
 import logist.plan.Plan;
 import logist.simulation.Vehicle;
 import logist.task.Task;
@@ -13,7 +14,7 @@ import logist.task.TaskSet;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
 
-public class NaiveCompany extends AbstractCompany {
+public class NaiveCompany extends AbstractCompany implements AuctionBehavior {
 
 	private Vehicle vehicle;
 	private City currentCity;

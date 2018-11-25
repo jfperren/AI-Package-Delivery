@@ -21,7 +21,7 @@ import logist.topology.Topology;
 import logist.topology.Topology.City;
 
 
-abstract class AbstractCompany implements AuctionBehavior {
+abstract class AbstractCompany {
 	
 	// Knowledge of the problem
 	protected Topology topology;
@@ -36,7 +36,6 @@ abstract class AbstractCompany implements AuctionBehavior {
 	protected Random random;
 	protected boolean log = false;	
 	
-	@Override
 	public void setup(Topology topology, TaskDistribution distribution, Agent agent) {
 
 		this.topology = topology;
@@ -100,7 +99,6 @@ abstract class AbstractCompany implements AuctionBehavior {
 		return false;
 	}
     
-    @Override
 	public void auctionResult(Task previous, int winner, Long[] bids) {
     
     	if (id == winner && log) {

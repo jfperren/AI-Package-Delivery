@@ -4,14 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import logist.agent.Agent;
+import logist.behavior.AuctionBehavior;
+import logist.plan.Plan;
 import logist.simulation.Vehicle;
 import logist.simulation.VehicleImpl;
 import logist.task.Task;
 import logist.task.TaskDistribution;
+import logist.task.TaskSet;
 import logist.topology.Topology;
 import solver.CostEstimator;
 
-public class AdversarialCompany extends SmartCompany {
+public class AdversarialCompany extends SmartCompany implements AuctionBehavior {
 
 
 	public class Adversary extends SmartCompany {
@@ -61,9 +64,9 @@ public class AdversarialCompany extends SmartCompany {
 	List<Double> myCosts = new ArrayList<Double>();
 	List<Double> theirCosts = new ArrayList<Double>();
 	
-	private double biasAdd = 0.0;
-	private double biasMult = 1.0;
-	private double alpha = 0.0;
+	private double biasAdd = 50.0;
+	private double biasMult = 1.05;
+	private double alpha = 0.5;
 	
 	private CostEstimator costEstimator;
 	
@@ -72,9 +75,9 @@ public class AdversarialCompany extends SmartCompany {
 
 		super.setup(topology, distribution, agent);
 		
-		biasAdd = agent.readProperty("bias-add", Double.class, 0.0);
-		biasMult = agent.readProperty("biad-mult", Double.class, 1.0);
-		alpha = agent.readProperty("alpha", Double.class, 0.0);
+		biasAdd = agent.readProperty("bias-add", Double.class, 50.0);
+		biasMult = agent.readProperty("biad-mult", Double.class, 1.05);
+		alpha = agent.readProperty("alpha", Double.class, 0.5);
 		
 		log = true;		
 		timeoutBid = timeoutBid / 2;
@@ -115,12 +118,8 @@ public class AdversarialCompany extends SmartCompany {
 				if (theirBid < theirLowestBid) { theirLowestBid = theirBid; }
 			}
 			
-			bid = theirLowestBid - 2;
+			bid = theirLowestBid - 1;
 		}
-		
-//		if (bid < 0.8 * discount(task) * myMarginalCost) {
-//			bid = (long) (0.8 * discount(task) * myMarginalCost);
-//		}
 			
 		return bid;
 	}

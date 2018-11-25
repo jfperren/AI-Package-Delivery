@@ -1,14 +1,10 @@
 package solver;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import logist.plan.Plan;
-import logist.simulation.Vehicle;
 import logist.task.Task;
 import logist.task.TaskDistribution;
 import logist.topology.Topology;
